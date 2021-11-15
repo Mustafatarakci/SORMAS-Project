@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 import com.fasterxml.classmate.MemberResolver;
@@ -55,19 +56,30 @@ public class InfraValidationSoundnessTest {
 
 	}
 
+	private static class ListElemRootNode {
+
+		public ListElemRootNode(Object inner) {
+			this.inner = inner;
+		}
+
+		Object inner;
+	}
+
 	private static class DtoTree extends Tree<ResolvedField> {
 
 		public DtoTree(ResolvedField root) {
-			super(root);
+			super(root, root.getType().toString());
 		}
 	}
 	private static class Tree<T> {
 
 		T root;
+		String label;
 		List<Tree<T>> children;
 
-		public Tree(T root) {
+		public Tree(T root, String label) {
 			this.root = root;
+			this.label = label;
 		}
 
 		@Override
@@ -79,7 +91,7 @@ public class InfraValidationSoundnessTest {
 
 		private String printTree(int currentIndent) {
 			String prefix = String.join("", Collections.nCopies(currentIndent, " "));
-			StringBuilder s = new StringBuilder(prefix + root);
+			StringBuilder s = new StringBuilder(prefix + root + " : " + label);
 			for (Tree<T> child : children) {
 				s.append("\n").append(child.printTree(currentIndent + indent));
 			}
@@ -89,20 +101,59 @@ public class InfraValidationSoundnessTest {
 	}
 
 	private DtoTree searchDtoTreeForInfra(DtoTree dtoTree) {
-		ResolvedField rootField = dtoTree.root;
-		List<ResolvedField> childFields = getNewAndRelevantSubfieldsForField(rootField);
 
+		final ResolvedType curType = dtoTree.root.getType();
+		if (curType.getErasedType().equals(Map.class)) {
+			List<ResolvedType> mapParams = curType.getTypeParameters();
+
+			if (!mapParams.isEmpty() && retainFieldType(mapParams.get(0)) && retainFieldType(mapParams.get(1))) {
+
+				final ResolvedType resolvedKey = typeResolver.resolve(mapParams.get(0).getErasedType());
+				List<ResolvedField> resolvedKeyFields = getAllFieldsForType(resolvedKey);
+				List<Tree<ResolvedField>> keyChildren =
+					resolvedKeyFields.stream().map(DtoTree::new).map(this::walkDtoTree).collect(Collectors.toList());
+
+				final ResolvedType resolvedValue = typeResolver.resolve(mapParams.get(0).getErasedType());
+				List<ResolvedField> resolvedValueFields = getAllFieldsForType(resolvedValue);
+				List<Tree<ResolvedField>> valueChildren =
+					resolvedValueFields.stream().map(DtoTree::new).map(this::walkDtoTree).collect(Collectors.toList());
+
+				dtoTree.children = Stream.concat(keyChildren.stream(), valueChildren.stream()).collect(Collectors.toList());;
+				return dtoTree;
+
+			}
+
+		}
+		if (curType.getErasedType().equals(List.class)) {
+			List<ResolvedType> listParam = curType.getTypeParameters();
+			if (!listParam.isEmpty() && retainFieldType(listParam.get(0))) {
+				final ResolvedType resolvedElem = typeResolver.resolve(listParam.get(0).getErasedType());
+				List<ResolvedField> resolvedElemField = getAllFieldsForType(resolvedElem);
+				dtoTree.children = resolvedElemField.stream().map(DtoTree::new).map(this::walkDtoTree).collect(Collectors.toList());
+				return dtoTree;
+			}
+		}
+
+		return walkDtoTree(dtoTree);
+
+	}
+
+	@NotNull
+	private DtoTree walkDtoTree(DtoTree currentNode) {
+		ResolvedField rootField = currentNode.root;
+		List<ResolvedField> childFields = getRelevantSubfieldsForField(rootField);
 		List<Tree<ResolvedField>> children = new ArrayList<>();
 
 		for (ResolvedField childField : childFields) {
+
 			DtoTree childTree = searchDtoTreeForInfra(new DtoTree(childField));
 			children.add(childTree);
 		}
-		dtoTree.children = children;
-		return dtoTree;
+		currentNode.children = children;
+		return currentNode;
 	}
 
-	private List<ResolvedField> getNewAndRelevantSubfieldsForField(ResolvedField resolvedField) {
+	private List<ResolvedField> getRelevantSubfieldsForField(ResolvedField resolvedField) {
 		ResolvedType fieldType = resolvedField.getType();
 
 		List<ResolvedField> newFoundFields = new LinkedList<>();
@@ -112,35 +163,9 @@ public class InfraValidationSoundnessTest {
 		}
 
 		newFoundFields = getAllFieldsForType(fieldType);
-		//.filter(t -> !alreadySeen.contains(t))
-		unpackUtilTypeFields(newFoundFields);
+
 		alreadySeen.addAll(newFoundFields.stream().map(ResolvedField::getType).collect(Collectors.toList()));
 		return new ArrayList<>(newFoundFields);
-	}
-
-	private void unpackUtilTypeFields(List<ResolvedField> newFoundFields) {
-		List<ResolvedField> concurrentModificationFtw = new ArrayList<>();
-
-		for (ResolvedField curField : newFoundFields) {
-			ResolvedType curType = curField.getType();
-			if (curType.getErasedType().equals(Map.class)) {
-				List<ResolvedType> mapParams = curType.getTypeParameters();
-
-				if (!mapParams.isEmpty()
-					&& retainFieldType(mapParams.get(0))
-					&& retainFieldType(mapParams.get(1))
-					&& Collections.disjoint(mapParams, alreadySeen)) {
-					//concurrentModificationFtw.addAll(mapParams);
-				}
-			} else if (curType.getErasedType().equals(List.class)) {
-				List<ResolvedType> listParam = curType.getTypeParameters();
-
-				if (!listParam.isEmpty() && retainFieldType(listParam.get(0)) && Collections.disjoint(listParam, alreadySeen)) {
-					//concurrentModificationFtw.addAll(listParam);
-				}
-			}
-		}
-		newFoundFields.addAll(concurrentModificationFtw);
 	}
 
 	// LinkedList implements both, List and Deque
