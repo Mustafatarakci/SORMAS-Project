@@ -1,18 +1,23 @@
 package de.symeda.sormas.backend.sormastosormas.validation;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.fasterxml.classmate.members.ResolvedConstructor;
+import de.symeda.sormas.api.utils.DataHelper;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -34,7 +39,8 @@ public class InfraValidationSoundnessTest {
 		new HashSet<>(Arrays.asList(Date.class, String.class, Double.class, Float.class, Integer.class, Boolean.class));
 
 	@Test
-	public void testShareCaseValidationIncoming() {
+	public void testShareCaseValidationIncoming()
+		throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
 
 		final ResolvedType resolve = typeResolver.resolve(DtoRootNode.class);
 		final ResolvedTypeWithMembers resolvedTypeWithMembers = memberResolver.resolve(resolve, null, null);
@@ -46,15 +52,77 @@ public class InfraValidationSoundnessTest {
 		SormasToSormasCaseDto caseDto = new SormasToSormasCaseDto();
 
 		for (DtoData[] path : paths) {
-			injectWrongInfra(caseDto, path);
+			ArrayDeque<DtoData> queue = new ArrayDeque<>(Arrays.asList(path));
+			injectWrongInfra(caseDto, queue, caseDto);
 		}
+		System.out.println(caseDto);
 	}
 
-	private void injectWrongInfra(SormasToSormasCaseDto caseDto, DtoData[] path) {
-		// first elem is always the dto itself, skip it
-		for (int i = 1; i < path.length; i++) {
-			DtoData field = path[i];
+	private void injectWrongInfra(SormasToSormasCaseDto caseDto, Queue<DtoData> path, Object parentObject)
+		throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+
+		DtoData current = path.poll();
+
+		if (current == null) {
+			return;
 		}
+
+		// first elem is always the dto itself, skip it
+
+		if (current.field.getName().equals("dtoUnderTest")) {
+			current = path.poll();
+			if (current == null) {
+				return;
+			}
+		}
+
+		final ResolvedField currentField = current.field;
+		Object child = null;
+
+		List<Field> availableFields = getFields(parentObject);
+		final List<Field> collect = availableFields.stream().filter(f -> f.getName().equals(currentField.getName())).collect(Collectors.toList());
+		Field injectionPoint = collect.get(0);
+		injectionPoint.setAccessible(true);
+
+		child = injectionPoint.get(parentObject);
+
+		if (child == null) {
+			if (path.peek() == null) {
+				Constructor<?> constructor = currentField.getType().getErasedType().getConstructor(String.class);
+				child = constructor.newInstance(DataHelper.createConstantUuid(0));
+			} else {
+				Constructor<?> constructor = currentField.getType().getErasedType().getConstructor();
+				child = constructor.newInstance();
+			}
+
+			injectionPoint.set(parentObject, child);
+		}
+
+		if (currentField.getType().isInstanceOf(List.class)) {
+			List list = (List) child;
+			if (list.isEmpty()) {
+				ResolvedType tmp = currentField.getType().getTypeParameters().get(0);
+				Constructor<?> constructor = tmp.getErasedType().getConstructor();
+				child = constructor.newInstance();
+				list.add(child);
+			} else {
+				child = list.get(0);
+			}
+		}
+
+		parentObject = child;
+		injectWrongInfra(caseDto, path, parentObject);
+
+	}
+
+	private <T> List<Field> getFields(T t) {
+		List<Field> fields = new ArrayList<>();
+		Class<?> clazz = t.getClass();
+		while (clazz != Object.class) {
+			fields.addAll(Arrays.asList(clazz.getDeclaredFields()));
+			clazz = clazz.getSuperclass();
+		}
+		return fields;
 	}
 
 	private static class DtoRootNode {
@@ -89,6 +157,11 @@ public class InfraValidationSoundnessTest {
 			ResolvedTypeWithMembers resolvedTypeWithMembers = memberResolver.resolve(type, null, null);
 			return Arrays.asList(resolvedTypeWithMembers.getConstructors());
 
+		}
+
+		@Override
+		public String toString() {
+			return field.toString();
 		}
 	}
 
@@ -215,14 +288,16 @@ public class InfraValidationSoundnessTest {
 		return dtoTree;
 	}
 
-	// LinkedList implements both, List and Deque
-	private LinkedList<ResolvedField> getAllFieldsForType(ResolvedType type) {
+	private List<ResolvedField> getAllFieldsForType(ResolvedType type) {
 		ResolvedTypeWithMembers resolvedTypeWithMembers = memberResolver.resolve(type, null, null);
 		ResolvedField[] memberFields = resolvedTypeWithMembers.getMemberFields();
 		ResolvedField[] staticFields = resolvedTypeWithMembers.getStaticFields();
-		return Stream.concat(Arrays.stream(memberFields), Arrays.stream(staticFields))
-			.filter(this::retainField)
-			.collect(Collectors.toCollection(LinkedList::new));
+		return Stream.concat(Arrays.stream(memberFields), Arrays.stream(staticFields)).filter(this::retainField).collect(Collectors.toList());
+	}
+
+	private List<ResolvedField> getAllFieldsForClass(Class<?> clazz) {
+		final ResolvedType resolved = typeResolver.resolve(clazz);
+		return getAllFieldsForType(resolved);
 	}
 
 	private boolean retainFieldType(ResolvedType type) {
