@@ -17,7 +17,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.fasterxml.classmate.members.ResolvedConstructor;
+import de.symeda.sormas.api.sormastosormas.validation.ValidationErrors;
 import de.symeda.sormas.api.utils.DataHelper;
+import de.symeda.sormas.backend.AbstractBeanTest;
+import de.symeda.sormas.backend.sormastosormas.entities.caze.SormasToSormasCaseDtoValidator;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -30,7 +33,11 @@ import com.fasterxml.classmate.types.ResolvedPrimitiveType;
 
 import de.symeda.sormas.api.sormastosormas.caze.SormasToSormasCaseDto;
 
-public class InfraValidationSoundnessTest {
+import javax.ejb.EJB;
+
+import static org.junit.Assert.assertEquals;
+
+public class InfraValidationSoundnessTest extends AbstractBeanTest {
 
 	private static final TypeResolver typeResolver = new TypeResolver();
 	private static final MemberResolver memberResolver = new MemberResolver(typeResolver);
@@ -50,17 +57,28 @@ public class InfraValidationSoundnessTest {
 		List<DtoData[]> paths = extractInfraFieldPaths(walkedTree);
 
 		SormasToSormasCaseDto caseDto = new SormasToSormasCaseDto();
-
+		Set<String> expected = new HashSet<>();
 		for (DtoData[] path : paths) {
 			ArrayDeque<DtoData> queue = new ArrayDeque<>(Arrays.asList(path));
-			injectWrongInfra(caseDto, queue, caseDto);
+			String caption = queue.stream().map(d -> d.field.getName()).collect(Collectors.joining("."));
+			expected.add(caption);
+			injectWrongInfra(caseDto, queue, caseDto, caption);
 		}
-		System.out.println(caseDto);
+		ValidationErrors errors = getSormasToSormasCaseDtoValidator().validateIncoming(caseDto);
+		Set<String> foundFields = errors.getSubGroups()
+			.stream()
+			.map(g -> g.getMessages())
+			.flatMap(m -> m.stream())
+			.map(m -> m.getArgs())
+			.flatMap(args -> Arrays.stream(args))
+			.map(a -> a.toString())
+			.collect(Collectors.toSet());
+		assertEquals(foundFields, expected);
+
 	}
 
-	private void injectWrongInfra(SormasToSormasCaseDto caseDto, Queue<DtoData> path, Object parentObject)
+	private void injectWrongInfra(SormasToSormasCaseDto caseDto, Queue<DtoData> path, Object parentObject, String caption)
 		throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
-
 		DtoData current = path.poll();
 
 		if (current == null) {
@@ -88,8 +106,8 @@ public class InfraValidationSoundnessTest {
 
 		if (child == null) {
 			if (path.peek() == null) {
-				Constructor<?> constructor = currentField.getType().getErasedType().getConstructor(String.class);
-				child = constructor.newInstance(DataHelper.createConstantUuid(0));
+				Constructor<?> constructor = currentField.getType().getErasedType().getConstructor(String.class, String.class, String.class);
+				child = constructor.newInstance(DataHelper.createConstantUuid(0), caption, "");
 			} else {
 				Constructor<?> constructor = currentField.getType().getErasedType().getConstructor();
 				child = constructor.newInstance();
@@ -111,7 +129,7 @@ public class InfraValidationSoundnessTest {
 		}
 
 		parentObject = child;
-		injectWrongInfra(caseDto, path, parentObject);
+		injectWrongInfra(caseDto, path, parentObject, caption);
 
 	}
 
@@ -212,7 +230,10 @@ public class InfraValidationSoundnessTest {
 		for (Tree<DtoData> subtree : currentChildren) {
 			if (subtree.children.isEmpty()) {
 				// we reached a leaf node
-				if (subtree.root.data.field.getType().getErasedType().getName().startsWith("de.symeda.sormas.api.infrastructure.")) {
+				final String pkgName = subtree.root.data.field.getType().getErasedType().getName();
+				if (pkgName.startsWith("de.symeda.sormas.api.infrastructure.")
+					&& !pkgName.contains("pointofentry")
+					&& !pkgName.contains("facility")) {
 					ret.add(
 						new DtoData[] {
 							pathFromRoot,

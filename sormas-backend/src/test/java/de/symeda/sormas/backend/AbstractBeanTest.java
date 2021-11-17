@@ -25,6 +25,7 @@ import javax.persistence.Query;
 
 import de.symeda.sormas.backend.labmessage.LabMessageService;
 import de.symeda.sormas.backend.sormastosormas.entities.caze.ReceivedCaseProcessor;
+import de.symeda.sormas.backend.sormastosormas.entities.caze.SormasToSormasCaseDtoValidator;
 import de.symeda.sormas.backend.sormastosormas.entities.contact.ReceivedContactProcessor;
 import de.symeda.sormas.backend.sormastosormas.entities.event.ReceivedEventProcessor;
 import de.symeda.sormas.backend.sormastosormas.entities.immunization.ReceivedImmunizationProcessor;
@@ -744,5 +745,9 @@ public abstract class AbstractBeanTest extends BaseBeanTest {
 
 	public AreaFacade getAreaFacade() {
 		return getBean(AreaFacadeEjbLocal.class);
+	}
+
+	public SormasToSormasCaseDtoValidator getSormasToSormasCaseDtoValidator() {
+		return getBean(SormasToSormasCaseDtoValidator.class);
 	}
 }
