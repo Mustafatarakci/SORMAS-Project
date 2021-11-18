@@ -37,6 +37,7 @@ public class SormasToSormasContactDtoValidator
 		infraValidator.validateRegion(contact.getRegion(), groupNameTag, validationErrors, contact::setRegion);
 		infraValidator.validateDistrict(contact.getDistrict(), groupNameTag, validationErrors, contact::setDistrict);
 		infraValidator.validateCommunity(contact.getCommunity(), groupNameTag, validationErrors, contact::setCommunity);
+		infraValidator.validateDistrict(contact.getReportingDistrict(), groupNameTag, validationErrors, contact::setReportingDistrict);
 
 		validateEpiData(contact.getEpiData(), validationErrors);
 

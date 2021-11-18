@@ -27,9 +27,14 @@ import de.symeda.sormas.backend.labmessage.LabMessageService;
 import de.symeda.sormas.backend.sormastosormas.entities.caze.ReceivedCaseProcessor;
 import de.symeda.sormas.backend.sormastosormas.entities.caze.SormasToSormasCaseDtoValidator;
 import de.symeda.sormas.backend.sormastosormas.entities.contact.ReceivedContactProcessor;
+import de.symeda.sormas.backend.sormastosormas.entities.contact.SormasToSormasContactDtoValidator;
 import de.symeda.sormas.backend.sormastosormas.entities.event.ReceivedEventProcessor;
+import de.symeda.sormas.backend.sormastosormas.entities.event.SormasToSormasEventDtoValidator;
+import de.symeda.sormas.backend.sormastosormas.entities.eventparticipant.SormasToSormasEventParticipantDtoValidator;
 import de.symeda.sormas.backend.sormastosormas.entities.immunization.ReceivedImmunizationProcessor;
+import de.symeda.sormas.backend.sormastosormas.entities.immunization.SormasToSormasImmunizationDtoValidator;
 import de.symeda.sormas.backend.sormastosormas.entities.sample.ReceivedSampleProcessor;
+import de.symeda.sormas.backend.sormastosormas.entities.sample.SormasToSormasSampleDtoValidator;
 import org.junit.Before;
 
 import de.symeda.sormas.api.ConfigFacade;
@@ -749,5 +754,25 @@ public abstract class AbstractBeanTest extends BaseBeanTest {
 
 	public SormasToSormasCaseDtoValidator getSormasToSormasCaseDtoValidator() {
 		return getBean(SormasToSormasCaseDtoValidator.class);
+	}
+
+	public SormasToSormasContactDtoValidator getSormasToSormasContactDtoValidator() {
+		return getBean(SormasToSormasContactDtoValidator.class);
+	}
+
+	public SormasToSormasEventDtoValidator getSormasToSormasEventDtoValidator() {
+		return getBean(SormasToSormasEventDtoValidator.class);
+	}
+
+	public SormasToSormasEventParticipantDtoValidator getSormasToSormasEventParticipantDtoValidator() {
+		return getBean(SormasToSormasEventParticipantDtoValidator.class);
+	}
+
+	public SormasToSormasImmunizationDtoValidator getSormasToSormasImmunizationDtoValidator() {
+		return getBean(SormasToSormasImmunizationDtoValidator.class);
+	}
+
+	public SormasToSormasSampleDtoValidator getSormasToSormasSampleDtoValidator() {
+		return getBean(SormasToSormasSampleDtoValidator.class);
 	}
 }
