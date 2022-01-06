@@ -46,7 +46,6 @@ public interface UserFacade {
 	long count(UserCriteria userCriteria);
 
 	/**
-	 * 
 	 * @param district
 	 * @param includeSupervisors
 	 *            independent from the district
@@ -91,4 +90,6 @@ public interface UserFacade {
 	List<UserReferenceDto> getUsersHavingTravelEntryInJurisdiction(TravelEntryReferenceDto travelEntryReferenceDto);
 
 	List<UserReferenceWithTaskNumbersDto> getAssignableUsersWithTaskNumbers(@NotNull TaskContextIndex taskContextIndex);
+
+	List<UserReferenceDto> getUsersByRegionAndRight(RegionReferenceDto region, UserRight userRight);
 }
