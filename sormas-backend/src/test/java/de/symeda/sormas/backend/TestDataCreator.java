@@ -166,6 +166,10 @@ public class TestDataCreator {
 		return createUser(rdcf.region.getUuid(), rdcf.district.getUuid(), rdcf.facility.getUuid(), "First", "Name", roles);
 	}
 
+	public UserDto createUser(RDCF rdcf, String firstName, String lastName, UserRole... roles) {
+		return createUser(rdcf.region.getUuid(), rdcf.district.getUuid(), rdcf.facility.getUuid(), firstName, lastName, roles);
+	}
+
 	public UserDto createUser(RDCFEntities rdcf, String firstName, String lastName, UserRole... roles) {
 		return createUser(rdcf.region.getUuid(), rdcf.district.getUuid(), rdcf.facility.getUuid(), firstName, lastName, roles);
 	}
@@ -658,7 +662,6 @@ public class TestDataCreator {
 		return createContact(reportingUser, null, contactPerson, null, new Date(), null, null, rdcf);
 	}
 
-
 	public ContactDto createContact(UserReferenceDto reportingUser, PersonReferenceDto contactPerson) {
 		return createContact(reportingUser, null, contactPerson, null, new Date(), null, null, null);
 	}
@@ -673,6 +676,14 @@ public class TestDataCreator {
 		Disease disease,
 		Consumer<ContactDto> customConfig) {
 		return createContact(reportingUser, null, contactPerson, null, new Date(), null, disease, null, customConfig);
+	}
+
+	public ContactDto createContact(
+		UserReferenceDto reportingUser,
+		PersonReferenceDto contactPerson,
+		CaseDataDto caze,
+		Consumer<ContactDto> customConfig) {
+		return createContact(reportingUser, null, contactPerson, caze, new Date(), null, caze.getDisease(), null, customConfig);
 	}
 
 	public ContactDto createContact(UserReferenceDto reportingUser, PersonReferenceDto contactPerson, Date reportDateTime) {

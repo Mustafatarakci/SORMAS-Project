@@ -134,15 +134,18 @@ import de.symeda.sormas.api.visit.VisitResultDto;
 import de.symeda.sormas.api.visit.VisitStatus;
 import de.symeda.sormas.api.visit.VisitSummaryExportDetailsDto;
 import de.symeda.sormas.api.visit.VisitSummaryExportDto;
+import de.symeda.sormas.backend.access.AccessChangeOperation;
 import de.symeda.sormas.backend.caze.Case;
 import de.symeda.sormas.backend.caze.CaseFacadeEjb;
 import de.symeda.sormas.backend.caze.CaseFacadeEjb.CaseFacadeEjbLocal;
 import de.symeda.sormas.backend.caze.CaseService;
+import de.symeda.sormas.backend.caze.caseaccess.CaseAccessService;
 import de.symeda.sormas.backend.clinicalcourse.ClinicalCourseFacadeEjb;
 import de.symeda.sormas.backend.common.AbstractDomainObject;
 import de.symeda.sormas.backend.common.ConfigFacadeEjb.ConfigFacadeEjbLocal;
 import de.symeda.sormas.backend.common.CriteriaBuilderHelper;
 import de.symeda.sormas.backend.common.TaskCreationException;
+import de.symeda.sormas.backend.contact.contactaccess.ContactAccessLogic;
 import de.symeda.sormas.backend.disease.DiseaseConfigurationFacadeEjb.DiseaseConfigurationFacadeEjbLocal;
 import de.symeda.sormas.backend.document.Document;
 import de.symeda.sormas.backend.document.DocumentService;
@@ -265,6 +268,8 @@ public class ContactFacadeEjb implements ContactFacade {
 	private SormasToSormasContactFacadeEjbLocal sormasToSormasContactFacade;
 	@EJB
 	private VaccinationFacadeEjb.VaccinationFacadeEjbLocal vaccinationFacade;
+	@EJB
+	private CaseAccessService caseAccessService;
 	@Resource
 	private ManagedScheduledExecutorService executorService;
 
@@ -363,6 +368,11 @@ public class ContactFacadeEjb implements ContactFacade {
 
 		externalJournalService.handleExternalJournalPersonUpdateAsync(dto.getPerson());
 
+		List<AccessChangeOperation> accessChangeOperations = null;
+		if (existingContactDto != null) {
+			accessChangeOperations = ContactAccessLogic.buildAccessChangeOperations(existingContact, dto);
+		}
+
 		// taking this out because it may lead to server problems
 		// case disease can change over time and there is currently no mechanism that would delete all related contacts
 		// in this case the best solution is to only keep this hidden from the UI and still allow it in the backend
@@ -375,7 +385,6 @@ public class ContactFacadeEjb implements ContactFacade {
 
 		if (existingContact == null && featureConfigurationFacade.isTaskGenerationFeatureEnabled(TaskType.CONTACT_INVESTIGATION)) {
 			createInvestigationTask(entity);
-
 		}
 
 		if (handleChanges) {
@@ -408,6 +417,12 @@ public class ContactFacadeEjb implements ContactFacade {
 			}
 
 			onContactChanged(existingContactDto, entity, internal);
+		}
+
+		if (existingContactDto == null) {
+			caseAccessService.insertAccessEntryForContact(entity);
+		} else {
+			caseAccessService.updateAccessEntryForContact(accessChangeOperations, entity);
 		}
 
 		return toDto(entity);

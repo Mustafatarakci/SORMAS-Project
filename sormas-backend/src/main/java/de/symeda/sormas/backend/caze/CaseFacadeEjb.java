@@ -195,6 +195,9 @@ import de.symeda.sormas.api.utils.fieldvisibility.FieldVisibilityCheckers;
 import de.symeda.sormas.api.visit.VisitDto;
 import de.symeda.sormas.api.visit.VisitResultDto;
 import de.symeda.sormas.api.visit.VisitStatus;
+import de.symeda.sormas.backend.access.AccessChangeOperation;
+import de.symeda.sormas.backend.caze.caseaccess.CaseAccessLogic;
+import de.symeda.sormas.backend.caze.caseaccess.CaseAccessService;
 import de.symeda.sormas.backend.caze.classification.CaseClassificationFacadeEjb.CaseClassificationFacadeEjbLocal;
 import de.symeda.sormas.backend.caze.maternalhistory.MaternalHistoryFacadeEjb;
 import de.symeda.sormas.backend.caze.maternalhistory.MaternalHistoryFacadeEjb.MaternalHistoryFacadeEjbLocal;
@@ -451,6 +454,8 @@ public class CaseFacadeEjb implements CaseFacade {
 	private SormasToSormasCaseFacadeEjbLocal sormasToSormasCaseFacade;
 	@EJB
 	private VaccinationFacadeEjb.VaccinationFacadeEjbLocal vaccinationFacade;
+	@EJB
+	private CaseAccessService caseAccessService;
 	@Resource
 	private ManagedScheduledExecutorService executorService;
 
@@ -1501,6 +1506,11 @@ public class CaseFacadeEjb implements CaseFacade {
 
 		externalJournalService.handleExternalJournalPersonUpdateAsync(dto.getPerson());
 
+		List<AccessChangeOperation> accessChangeOperations = null;
+		if (existingCaseDto != null) {
+			accessChangeOperations = CaseAccessLogic.buildAccessChangeOperations(existingCaze, dto);
+		}
+
 		existingCaze = fillOrBuildEntity(dto, existingCaze, checkChangeDate);
 
 		// Set version number on a new case
@@ -1509,6 +1519,13 @@ public class CaseFacadeEjb implements CaseFacade {
 		}
 
 		doSave(existingCaze, handleChanges, existingCaseDto, syncShares);
+
+		// Create access table entries
+		if (existingCaseDto == null) {
+			caseAccessService.insertAccessEntries(existingCaze);
+		} else {
+			caseAccessService.updateAccessEntries(accessChangeOperations, existingCaze);
+		}
 
 		return convertToDto(existingCaze, Pseudonymizer.getDefault(userService::hasRight));
 	}

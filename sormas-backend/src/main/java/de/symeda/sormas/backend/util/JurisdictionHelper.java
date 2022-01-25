@@ -77,4 +77,15 @@ public class JurisdictionHelper {
 	public static Expression<Object> booleanSelector(CriteriaBuilder cb, Predicate jurisdictionPredicate) {
 		return cb.selectCase().when(jurisdictionPredicate, cb.literal(true)).otherwise(cb.literal(false));
 	}
+
+	/**
+	 * Returns whether the place of stay jurisdiction (region, district, community) differs from the
+	 * responsible jurisdiction (responsibleRegion, responsibleDistrict, responsibleCommunity).
+	 */
+	public static boolean hasDifferingJurisdictions(Case caze) {
+		return (caze.getRegion() != null && !caze.getRegion().getUuid().equals(caze.getResponsibleRegion().getUuid()))
+			|| (caze.getDistrict() != null && !caze.getDistrict().getUuid().equals(caze.getResponsibleRegion().getUuid()))
+			|| (caze.getCommunity() != null
+				&& (caze.getResponsibleCommunity() == null || !caze.getCommunity().getUuid().equals(caze.getResponsibleCommunity().getUuid())));
+	}
 }
