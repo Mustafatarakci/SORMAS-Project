@@ -9838,7 +9838,7 @@ DO $$
     BEGIN
         FOR case_info IN SELECT id, reportinguser_id, surveillanceofficer_id, responsibleregion_id, responsibledistrict_id,
                                 responsiblecommunity_id, healthfacility_id, pointofentry_id, region_id, district_id,
-                                community_id FROM cases
+                                community_id FROM cases WHERE deleted IS FALSE
         LOOP
             INSERT INTO cases_access (id, uuid, changedate, creationdate, caze_id, reportinguser_id, assigneduser_id, region_id, district_id,
                                       community_id, facility_id, pointofentry_id)
@@ -9859,7 +9859,7 @@ $$ LANGUAGE plpgsql;
 DO $$
     DECLARE contact_info RECORD;
     BEGIN
-        FOR contact_info IN SELECT id, caze_id, reportinguser_id, contactofficer_id, region_id, district_id, community_id FROM contact
+        FOR contact_info IN SELECT id, caze_id, reportinguser_id, contactofficer_id, region_id, district_id, community_id FROM contact WHERE deleted IS FALSE
             LOOP
                 INSERT INTO cases_access (id, uuid, changedate, creationdate, caze_id, contact_id, reportinguser_id, assigneduser_id,
                                           region_id, district_id, community_id)
