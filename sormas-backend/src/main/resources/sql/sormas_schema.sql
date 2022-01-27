@@ -9816,7 +9816,6 @@ CREATE TABLE cases_access (
     caze_id bigint,
     contact_id bigint,
     sample_id bigint,
-    sys_period tstzrange not null,
     primary key(id));
 ALTER TABLE cases_access OWNER TO sormas_user;
 
@@ -9859,7 +9858,8 @@ $$ LANGUAGE plpgsql;
 DO $$
     DECLARE contact_info RECORD;
     BEGIN
-        FOR contact_info IN SELECT id, caze_id, reportinguser_id, contactofficer_id, region_id, district_id, community_id FROM contact WHERE deleted IS FALSE
+        FOR contact_info IN SELECT id, caze_id, reportinguser_id, contactofficer_id, region_id, district_id, community_id FROM contact
+        WHERE deleted IS FALSE AND caze_id IS NOT NULL
             LOOP
                 INSERT INTO cases_access (id, uuid, changedate, creationdate, caze_id, contact_id, reportinguser_id, assigneduser_id,
                                           region_id, district_id, community_id)
@@ -9873,7 +9873,7 @@ $$ LANGUAGE plpgsql;
 DO $$
     DECLARE sample_info RECORD;
     BEGIN
-        FOR sample_info IN SELECT id, associatedcase_id, lab_id FROM samples
+        FOR sample_info IN SELECT id, associatedcase_id, lab_id FROM samples WHERE deleted IS FALSE AND associatedcase_id IS NOT NULL AND lab_id IS NOT NULL
             LOOP
                 INSERT INTO cases_access (id, uuid, changedate, creationdate, caze_id, sample_id, facility_id)
                 VALUES (nextval('entity_seq'), generate_base32_uuid(), now(), now(), sample_info.associatedcase_id, sample_info.id, sample_info.lab_id);
