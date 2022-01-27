@@ -9829,7 +9829,6 @@ ALTER TABLE cases_access ADD CONSTRAINT fk_cases_access_pointofentry_id FOREIGN 
 ALTER TABLE cases_access ADD CONSTRAINT fk_cases_access_caze_id FOREIGN KEY (caze_id) REFERENCES cases(id);
 ALTER TABLE cases_access ADD CONSTRAINT fk_cases_access_contact_id FOREIGN KEY (contact_id) REFERENCES contact(id);
 ALTER TABLE cases_access ADD CONSTRAINT fk_cases_access_sample_id FOREIGN KEY (sample_id) REFERENCES samples(id);
-ALTER TABLE ONLY cases_access ADD CONSTRAINT unq_cases_access_primarydata UNIQUE (caze_id, primarydata);
 
 /* Create basic access entries */
 DO $$
@@ -9840,14 +9839,15 @@ DO $$
                                 community_id FROM cases WHERE deleted IS FALSE
         LOOP
             INSERT INTO cases_access (id, uuid, changedate, creationdate, caze_id, reportinguser_id, assigneduser_id, region_id, district_id,
-                                      community_id, facility_id, pointofentry_id)
+                                      community_id, facility_id, pointofentry_id, pseudonymized, primarydata)
             VALUES (nextval('entity_seq'), generate_base32_uuid(), now(), now(), case_info.id, case_info.reportinguser_id, case_info.surveillanceofficer_id,
                     case_info.responsibleregion_id, case_info.responsibledistrict_id, case_info.responsiblecommunity_id, case_info.healthfacility_id,
-                    case_info.pointofentry_id);
+                    case_info.pointofentry_id, false, true);
 
             IF (case_info.region_id IS NOT NULL) THEN
-                INSERT INTO cases_access (id, uuid, changedate, creationdate, caze_id, region_id, district_id, community_id)
-                VALUES (nextval('entity_seq'), generate_base32_uuid(), now(), now(), case_info.id, case_info.region_id, case_info.district_id, case_info.community_id);
+                INSERT INTO cases_access (id, uuid, changedate, creationdate, caze_id, region_id, district_id, community_id, pseudonymized, primarydata)
+                VALUES (nextval('entity_seq'), generate_base32_uuid(), now(), now(), case_info.id, case_info.region_id, case_info.district_id,
+                        case_info.community_id, false, false);
             END IF;
 
             END LOOP;
@@ -9862,9 +9862,9 @@ DO $$
         WHERE deleted IS FALSE AND caze_id IS NOT NULL
             LOOP
                 INSERT INTO cases_access (id, uuid, changedate, creationdate, caze_id, contact_id, reportinguser_id, assigneduser_id,
-                                          region_id, district_id, community_id)
+                                          region_id, district_id, community_id, pseudonymized, primarydata)
                 VALUES (nextval('entity_seq'), generate_base32_uuid(), now(), now(), contact_info.caze_id, contact_info.id, contact_info.reportinguser_id,
-                        contact_info.contactofficer_id, contact_info.region_id, contact_info.district_id, contact_info.community_id);
+                        contact_info.contactofficer_id, contact_info.region_id, contact_info.district_id, contact_info.community_id, true, false);
             END LOOP;
     END;
 $$ LANGUAGE plpgsql;
@@ -9875,8 +9875,8 @@ DO $$
     BEGIN
         FOR sample_info IN SELECT id, associatedcase_id, lab_id FROM samples WHERE deleted IS FALSE AND associatedcase_id IS NOT NULL AND lab_id IS NOT NULL
             LOOP
-                INSERT INTO cases_access (id, uuid, changedate, creationdate, caze_id, sample_id, facility_id)
-                VALUES (nextval('entity_seq'), generate_base32_uuid(), now(), now(), sample_info.associatedcase_id, sample_info.id, sample_info.lab_id);
+                INSERT INTO cases_access (id, uuid, changedate, creationdate, caze_id, sample_id, facility_id, pseudonymized, primarydata)
+                VALUES (nextval('entity_seq'), generate_base32_uuid(), now(), now(), sample_info.associatedcase_id, sample_info.id, sample_info.lab_id, true, false);
             END LOOP;
     END;
 $$ LANGUAGE plpgsql;
