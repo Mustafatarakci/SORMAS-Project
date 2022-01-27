@@ -134,7 +134,6 @@ import de.symeda.sormas.api.visit.VisitResultDto;
 import de.symeda.sormas.api.visit.VisitStatus;
 import de.symeda.sormas.api.visit.VisitSummaryExportDetailsDto;
 import de.symeda.sormas.api.visit.VisitSummaryExportDto;
-import de.symeda.sormas.backend.access.AccessChangeOperation;
 import de.symeda.sormas.backend.caze.Case;
 import de.symeda.sormas.backend.caze.CaseFacadeEjb;
 import de.symeda.sormas.backend.caze.CaseFacadeEjb.CaseFacadeEjbLocal;
@@ -145,6 +144,7 @@ import de.symeda.sormas.backend.common.AbstractDomainObject;
 import de.symeda.sormas.backend.common.ConfigFacadeEjb.ConfigFacadeEjbLocal;
 import de.symeda.sormas.backend.common.CriteriaBuilderHelper;
 import de.symeda.sormas.backend.common.TaskCreationException;
+import de.symeda.sormas.backend.contact.contactaccess.ContactAccessEntities;
 import de.symeda.sormas.backend.contact.contactaccess.ContactAccessLogic;
 import de.symeda.sormas.backend.disease.DiseaseConfigurationFacadeEjb.DiseaseConfigurationFacadeEjbLocal;
 import de.symeda.sormas.backend.document.Document;
@@ -368,11 +368,15 @@ public class ContactFacadeEjb implements ContactFacade {
 
 		externalJournalService.handleExternalJournalPersonUpdateAsync(dto.getPerson());
 
-		List<AccessChangeOperation> accessChangeOperations = null;
+		ContactAccessEntities contactAccessEntities = null;
 		if (existingContactDto != null) {
-			accessChangeOperations = ContactAccessLogic.buildAccessChangeOperations(existingContact, dto);
+			contactAccessEntities = (ContactAccessEntities) new ContactAccessEntities().cazeId(existingContact.getCaze())
+				.reportingUserId(existingContact.getReportingUser())
+				.assignedUser(existingContact.getContactOfficer())
+				.region(existingContact.getRegion())
+				.district(existingContact.getDistrict())
+				.community(existingContact.getCommunity());
 		}
-
 		// taking this out because it may lead to server problems
 		// case disease can change over time and there is currently no mechanism that would delete all related contacts
 		// in this case the best solution is to only keep this hidden from the UI and still allow it in the backend
@@ -419,13 +423,16 @@ public class ContactFacadeEjb implements ContactFacade {
 			onContactChanged(existingContactDto, entity, internal);
 		}
 
+		ContactDto savedContact = toDto(entity);
+
 		if (existingContactDto == null) {
 			caseAccessService.insertAccessEntryForContact(entity);
 		} else {
-			caseAccessService.updateAccessEntryForContact(accessChangeOperations, entity);
+			caseAccessService
+				.updateAccessEntryForContact(ContactAccessLogic.buildAccessChangeOperations(contactAccessEntities, savedContact), entity);
 		}
 
-		return toDto(entity);
+		return savedContact;
 	}
 
 	public void onContactChanged(ContactDto contact, boolean syncShares) {

@@ -172,7 +172,8 @@ public class CaseAccessService extends BaseAdoService<CaseAccess> {
 		});
 
 		primaryCu.set(AbstractDomainObject.CHANGE_DATE, Timestamp.from(Instant.now()));
-		primaryCu.where(cb.isTrue(primaryRoot.get(AbstractEntityAccess.PRIMARY_DATA)));
+		primaryCu
+			.where(cb.and(cb.equal(primaryRoot.get(CaseAccess.CAZE), updatedCase), cb.isTrue(primaryRoot.get(AbstractEntityAccess.PRIMARY_DATA))));
 
 		em.createQuery(primaryCu).executeUpdate();
 
@@ -196,7 +197,10 @@ public class CaseAccessService extends BaseAdoService<CaseAccess> {
 
 				secondaryCu.set(AbstractDomainObject.CHANGE_DATE, Timestamp.from(Instant.now()));
 				secondaryCu.where(
-					cb.and(cb.isFalse(primaryRoot.get(AbstractEntityAccess.PRIMARY_DATA)), cb.equal(secondaryRoot.get(o.getProperty()), o.getId())));
+					cb.and(
+						cb.isFalse(secondaryRoot.get(AbstractEntityAccess.PRIMARY_DATA)),
+						cb.equal(secondaryRoot.get(o.getProperty()), o.getId()),
+						cb.equal(secondaryRoot.get(CaseAccess.CAZE), updatedCase)));
 
 				em.createQuery(secondaryCu).executeUpdate();
 			});

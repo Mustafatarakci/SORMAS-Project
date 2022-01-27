@@ -13,15 +13,22 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.symeda.sormas.backend.caze.caseaccess;
+package de.symeda.sormas.backend.contact.contactaccess;
 
-import java.util.List;
+import de.symeda.sormas.backend.access.BaseAccessEntities;
+import de.symeda.sormas.backend.caze.Case;
 
-public class CaseAccessForeignChanges {
+public class ContactAccessEntities extends BaseAccessEntities {
 
-	private List<Long> addedContactIds;
-	private List<Long> deletedContactIds;
-	private List<Long> addedSampleIds;
-	private List<Long> deletedSampleIds;
+	private Case caze;
+
+	public Case getCaze() {
+		return caze;
+	}
+
+	public ContactAccessEntities cazeId(Case caze) {
+		this.caze = caze;
+		return this;
+	}
 
 }

@@ -29,12 +29,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.symeda.sormas.api.feature.FeatureType;
-import de.symeda.sormas.api.feature.FeatureTypeProperty;
 import de.symeda.sormas.api.importexport.ImportExportUtils;
 import de.symeda.sormas.api.task.TaskType;
 import de.symeda.sormas.api.user.UserRole;
 import de.symeda.sormas.api.utils.DateHelper;
 import de.symeda.sormas.backend.caze.CaseFacadeEjb.CaseFacadeEjbLocal;
+import de.symeda.sormas.backend.caze.caseaccess.CaseAccessService;
 import de.symeda.sormas.backend.common.ConfigFacadeEjb.ConfigFacadeEjbLocal;
 import de.symeda.sormas.backend.contact.ContactFacadeEjb.ContactFacadeEjbLocal;
 import de.symeda.sormas.backend.document.DocumentFacadeEjb.DocumentFacadeEjbLocal;
@@ -79,6 +79,8 @@ public class CronService {
 	private ImmunizationFacadeEjb.ImmunizationFacadeEjbLocal immunizationFacade;
 	@EJB
 	private CentralInfraSyncFacade centralInfraSyncFacade;
+	@EJB
+	private CaseAccessService caseAccessService;
 
 	@Schedule(hour = "*", minute = "*/" + TASK_UPDATE_INTERVAL, second = "0", persistent = false)
 	public void sendNewAndDueTaskMessages() {
@@ -185,5 +187,10 @@ public class CronService {
 	@Schedule(hour = "1", minute = "50", persistent = false)
 	public void syncInfraWithCentral() {
 		centralInfraSyncFacade.syncAll();
+	}
+
+	@Schedule(hour = "1", minute = "55", persistent = false)
+	public void deleteEmptyAccessEntries() {
+		caseAccessService.deleteEmptyAccessEntries();
 	}
 }

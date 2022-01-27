@@ -22,80 +22,79 @@ import de.symeda.sormas.api.caze.CaseDataDto;
 import de.symeda.sormas.backend.access.AbstractAccessLogic;
 import de.symeda.sormas.backend.access.AbstractEntityAccess;
 import de.symeda.sormas.backend.access.AccessChangeOperation;
-import de.symeda.sormas.backend.caze.Case;
 
 public abstract class CaseAccessLogic extends AbstractAccessLogic {
 
-	public static List<AccessChangeOperation> buildAccessChangeOperations(Case existingCase, CaseDataDto updatedCase) {
+	public static List<AccessChangeOperation> buildAccessChangeOperations(CaseAccessEntities caseAccessEntities, CaseDataDto updatedCase) {
 
 		List<AccessChangeOperation> changeOperations = new ArrayList<>();
 
 		insertChangeOperation(
 			changeOperations,
-			existingCase.getReportingUser(),
+			caseAccessEntities.getReportingUser(),
 			updatedCase.getReportingUser(),
 			AbstractEntityAccess.REPORTING_USER,
 			null);
 		insertChangeOperation(
 			changeOperations,
-			existingCase.getSurveillanceOfficer(),
+			caseAccessEntities.getAssignedUser(),
 			updatedCase.getSurveillanceOfficer(),
 			AbstractEntityAccess.ASSIGNED_USER,
 			CaseDataDto.SURVEILLANCE_OFFICER);
 		insertChangeOperation(
 			changeOperations,
-			existingCase.getResponsibleRegion(),
+			caseAccessEntities.getResponsibleRegion(),
 			updatedCase.getResponsibleRegion(),
 			AbstractEntityAccess.REGION,
 			CaseDataDto.RESPONSIBLE_REGION);
 		insertChangeOperation(
 			changeOperations,
-			existingCase.getResponsibleDistrict(),
+			caseAccessEntities.getResponsibleDistrict(),
 			updatedCase.getResponsibleDistrict(),
 			AbstractEntityAccess.DISTRICT,
 			CaseDataDto.RESPONSIBLE_DISTRICT);
 		insertChangeOperation(
 			changeOperations,
-			existingCase.getResponsibleCommunity(),
+			caseAccessEntities.getResponsibleCommunity(),
 			updatedCase.getResponsibleCommunity(),
 			AbstractEntityAccess.COMMUNITY,
 			CaseDataDto.RESPONSIBLE_COMMUNITY);
 		insertChangeOperation(
 			changeOperations,
-			existingCase.getHealthFacility(),
+			caseAccessEntities.getFacility(),
 			updatedCase.getHealthFacility(),
 			AbstractEntityAccess.FACILITY,
 			CaseDataDto.HEALTH_FACILITY);
 		insertChangeOperation(
 			changeOperations,
-			existingCase.getPointOfEntry(),
+			caseAccessEntities.getPointOfEntry(),
 			updatedCase.getPointOfEntry(),
 			AbstractEntityAccess.POINT_OF_ENTRY,
 			null);
 		insertChangeOperation(
 			changeOperations,
-			existingCase.getRegion(),
+			caseAccessEntities.getRegion(),
 			updatedCase.getRegion(),
 			AbstractEntityAccess.REGION,
 			null,
 			false,
-			existingCase.getDistrict() == null && existingCase.getCommunity() == null);
+			caseAccessEntities.getDistrict() == null && caseAccessEntities.getCommunity() == null);
 		insertChangeOperation(
 			changeOperations,
-			existingCase.getDistrict(),
+			caseAccessEntities.getDistrict(),
 			updatedCase.getDistrict(),
 			AbstractEntityAccess.DISTRICT,
 			null,
 			false,
-			existingCase.getRegion() == null && existingCase.getCommunity() == null);
+			caseAccessEntities.getRegion() == null && caseAccessEntities.getCommunity() == null);
 		insertChangeOperation(
 			changeOperations,
-			existingCase.getCommunity(),
+			caseAccessEntities.getCommunity(),
 			updatedCase.getCommunity(),
 			AbstractEntityAccess.COMMUNITY,
 			null,
 			false,
-			existingCase.getRegion() == null && existingCase.getDistrict() == null);
+			caseAccessEntities.getRegion() == null && caseAccessEntities.getDistrict() == null);
 
 		return changeOperations;
 	}

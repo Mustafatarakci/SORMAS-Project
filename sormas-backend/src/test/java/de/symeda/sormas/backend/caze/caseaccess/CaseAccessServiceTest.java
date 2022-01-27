@@ -36,7 +36,6 @@ import de.symeda.sormas.api.user.UserDto;
 import de.symeda.sormas.api.user.UserRole;
 import de.symeda.sormas.backend.AbstractBeanTest;
 import de.symeda.sormas.backend.TestDataCreator;
-import de.symeda.sormas.backend.access.AbstractEntityAccess;
 import de.symeda.sormas.backend.access.AccessibleEntity;
 
 public class CaseAccessServiceTest extends AbstractBeanTest {
@@ -114,15 +113,26 @@ public class CaseAccessServiceTest extends AbstractBeanTest {
 	public void testUpdateAccessEntries() {
 
 		CaseDataDto caze = creator.createCase(survOff1.toReference(), rdcf1, null);
+		final String cazeUuid = caze.getUuid();
 		List<CaseAccess> caseAccesses = getCaseAccessService().getAll();
 		assertThat(caseAccesses.size(), is(1));
 		assertThat(caseAccesses.get(0).getReportingUser().getUuid(), is(survOff1.getUuid()));
 
+		CaseDataDto caze2 = creator.createCase(survOff1.toReference(), rdcf1, null);
+
 		caze.setReportingUser(survOff2.toReference());
 		caze = getCaseFacade().saveCase(caze);
 		caseAccesses = getCaseAccessService().getAll();
-		assertThat(caseAccesses.size(), is(1));
-		assertThat(caseAccesses.get(0).getReportingUser().getUuid(), is(survOff2.getUuid()));
+		assertThat(caseAccesses.size(), is(2));
+		assertThat(
+			caseAccesses.stream()
+				.filter(a -> a.getCaze().getUuid().equals(cazeUuid))
+				.findFirst()
+				.orElseThrow(RuntimeException::new)
+				.getReportingUser()
+				.getUuid(),
+			is(survOff2.getUuid()));
+		assertThat(getCaseFacade().getCaseDataByUuid(caze2.getUuid()).getReportingUser().getUuid(), is(survOff1.getUuid()));
 
 		caze.setRegion(rdcf3.region);
 		caze.setDistrict(rdcf3.district);
@@ -130,9 +140,15 @@ public class CaseAccessServiceTest extends AbstractBeanTest {
 		caze.setPointOfEntry(rdcf3.pointOfEntry);
 		caze = getCaseFacade().saveCase(caze);
 		caseAccesses = getCaseAccessService().getAll();
-		assertThat(caseAccesses.size(), is(2));
-		CaseAccess primaryAccess = caseAccesses.stream().filter(AbstractEntityAccess::isPrimaryData).findFirst().orElseThrow(RuntimeException::new);
-		CaseAccess secondaryAccess = caseAccesses.stream().filter(a -> !a.isPrimaryData()).findFirst().orElseThrow(RuntimeException::new);
+		assertThat(caseAccesses.size(), is(3));
+		CaseAccess primaryAccess = caseAccesses.stream()
+			.filter(a -> a.isPrimaryData() && a.getCaze().getUuid().equals(cazeUuid))
+			.findFirst()
+			.orElseThrow(RuntimeException::new);
+		CaseAccess secondaryAccess = caseAccesses.stream()
+			.filter(a -> !a.isPrimaryData() && a.getCaze().getUuid().equals(cazeUuid))
+			.findFirst()
+			.orElseThrow(RuntimeException::new);
 		assertThat(primaryAccess.getRegion().getUuid(), is(rdcf1.region.getUuid()));
 		assertThat(primaryAccess.getFacility().getUuid(), is(rdcf3.facility.getUuid()));
 		assertThat(primaryAccess.getPointOfEntry().getUuid(), is(rdcf3.pointOfEntry.getUuid()));
@@ -150,14 +166,21 @@ public class CaseAccessServiceTest extends AbstractBeanTest {
 		caze.setResponsibleCommunity(rdcf3.community);
 		caze = getCaseFacade().saveCase(caze);
 		caseAccesses = getCaseAccessService().getAll();
-		assertThat(caseAccesses.size(), is(2));
-		primaryAccess = caseAccesses.stream().filter(AbstractEntityAccess::isPrimaryData).findFirst().orElseThrow(RuntimeException::new);
-		secondaryAccess = caseAccesses.stream().filter(a -> !a.isPrimaryData()).findFirst().orElseThrow(RuntimeException::new);
+		assertThat(caseAccesses.size(), is(3));
+		primaryAccess = caseAccesses.stream()
+			.filter(a -> a.isPrimaryData() && a.getCaze().getUuid().equals(cazeUuid))
+			.findFirst()
+			.orElseThrow(RuntimeException::new);
+		secondaryAccess = caseAccesses.stream()
+			.filter(a -> !a.isPrimaryData() && a.getCaze().getUuid().equals(cazeUuid))
+			.findFirst()
+			.orElseThrow(RuntimeException::new);
 		assertThat(primaryAccess.getRegion().getUuid(), is(rdcf3.region.getUuid()));
 		assertThat(primaryAccess.getDistrict().getUuid(), is(rdcf3.district.getUuid()));
 		assertThat(primaryAccess.getCommunity().getUuid(), is(rdcf3.community.getUuid()));
 		assertThat(secondaryAccess.getRegion().getUuid(), is(rdcf2.region.getUuid()));
 		assertThat(secondaryAccess.getDistrict().getUuid(), is(rdcf2.district.getUuid()));
+		assertThat(getCaseFacade().getCaseDataByUuid(caze2.getUuid()).getResponsibleRegion().getUuid(), is(rdcf1.region.getUuid()));
 
 		caze.setRegion(null);
 		caze.setDistrict(null);
@@ -165,8 +188,11 @@ public class CaseAccessServiceTest extends AbstractBeanTest {
 		caze.setPointOfEntry(rdcf3.pointOfEntry);
 		getCaseFacade().saveCase(caze);
 		caseAccesses = getCaseAccessService().getAll();
-		assertThat(caseAccesses.size(), is(2));
-		secondaryAccess = caseAccesses.stream().filter(a -> !a.isPrimaryData()).findFirst().orElseThrow(RuntimeException::new);
+		assertThat(caseAccesses.size(), is(3));
+		secondaryAccess = caseAccesses.stream()
+			.filter(a -> !a.isPrimaryData() && a.getCaze().getUuid().equals(cazeUuid))
+			.findFirst()
+			.orElseThrow(RuntimeException::new);
 		assertNull(secondaryAccess.getRegion());
 		assertNull(secondaryAccess.getDistrict());
 	}

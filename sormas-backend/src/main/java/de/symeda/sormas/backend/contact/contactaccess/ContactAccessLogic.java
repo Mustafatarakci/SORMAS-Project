@@ -23,30 +23,39 @@ import de.symeda.sormas.backend.access.AbstractAccessLogic;
 import de.symeda.sormas.backend.access.AbstractEntityAccess;
 import de.symeda.sormas.backend.access.AccessChangeOperation;
 import de.symeda.sormas.backend.caze.caseaccess.CaseAccess;
-import de.symeda.sormas.backend.contact.Contact;
 
 public class ContactAccessLogic extends AbstractAccessLogic {
 
-	public static List<AccessChangeOperation> buildAccessChangeOperations(Contact existingContact, ContactDto updatedContact) {
+	public static List<AccessChangeOperation> buildAccessChangeOperations(ContactAccessEntities contactAccessEntities, ContactDto updatedContact) {
 
 		List<AccessChangeOperation> changeOperations = new ArrayList<>();
 
 		insertChangeOperation(
 			changeOperations,
-			existingContact.getReportingUser(),
+			contactAccessEntities.getReportingUser(),
 			updatedContact.getReportingUser(),
 			AbstractEntityAccess.REPORTING_USER,
 			null);
 		insertChangeOperation(
 			changeOperations,
-			existingContact.getContactOfficer(),
+			contactAccessEntities.getAssignedUser(),
 			updatedContact.getContactOfficer(),
 			AbstractEntityAccess.ASSIGNED_USER,
 			ContactDto.CONTACT_OFFICER);
-		insertChangeOperation(changeOperations, existingContact.getRegion(), updatedContact.getRegion(), AbstractEntityAccess.REGION, null);
-		insertChangeOperation(changeOperations, existingContact.getDistrict(), updatedContact.getDistrict(), AbstractEntityAccess.DISTRICT, null);
-		insertChangeOperation(changeOperations, existingContact.getCommunity(), updatedContact.getCommunity(), AbstractEntityAccess.COMMUNITY, null);
-		insertChangeOperation(changeOperations, existingContact.getCaze(), updatedContact.getCaze(), CaseAccess.CAZE, null);
+		insertChangeOperation(changeOperations, contactAccessEntities.getRegion(), updatedContact.getRegion(), AbstractEntityAccess.REGION, null);
+		insertChangeOperation(
+			changeOperations,
+			contactAccessEntities.getDistrict(),
+			updatedContact.getDistrict(),
+			AbstractEntityAccess.DISTRICT,
+			null);
+		insertChangeOperation(
+			changeOperations,
+			contactAccessEntities.getCommunity(),
+			updatedContact.getCommunity(),
+			AbstractEntityAccess.COMMUNITY,
+			null);
+		insertChangeOperation(changeOperations, contactAccessEntities.getCaze(), updatedContact.getCaze(), CaseAccess.CAZE, null);
 
 		return changeOperations;
 	}

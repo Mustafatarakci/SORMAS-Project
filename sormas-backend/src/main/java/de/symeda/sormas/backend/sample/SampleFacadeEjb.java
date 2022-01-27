@@ -76,7 +76,7 @@ import de.symeda.sormas.api.utils.DataHelper;
 import de.symeda.sormas.api.utils.DateHelper;
 import de.symeda.sormas.api.utils.SortProperty;
 import de.symeda.sormas.api.utils.ValidationRuntimeException;
-import de.symeda.sormas.backend.access.AccessChangeOperation;
+import de.symeda.sormas.backend.access.BaseAccessEntities;
 import de.symeda.sormas.backend.caze.Case;
 import de.symeda.sormas.backend.caze.CaseFacadeEjb;
 import de.symeda.sormas.backend.caze.CaseFacadeEjb.CaseFacadeEjbLocal;
@@ -361,9 +361,9 @@ public class SampleFacadeEjb implements SampleFacade {
 
 		restorePseudonymizedDto(dto, existingSample, existingSampleDto);
 
-		List<AccessChangeOperation> accessChangeOperations = null;
+		BaseAccessEntities sampleAccessEntities = null;
 		if (existingSampleDto != null) {
-			accessChangeOperations = SampleAccessLogic.buildAccessChangeOperations(existingSample, dto);
+			sampleAccessEntities = new BaseAccessEntities().facility(existingSample.getLab());
 		}
 
 		Sample sample = fromDto(dto, checkChangeDate);
@@ -382,13 +382,15 @@ public class SampleFacadeEjb implements SampleFacade {
 			onSampleChanged(existingSampleDto, sample, internal);
 		}
 
+		SampleDto savedSample = toDto(sample);
+
 		if (existingSampleDto == null) {
 			caseAccessService.insertAccessEntryForSample(sample);
 		} else {
-			caseAccessService.updateAccessEntryForSample(accessChangeOperations, sample);
+			caseAccessService.updateAccessEntryForSample(SampleAccessLogic.buildAccessChangeOperations(sampleAccessEntities, savedSample), sample);
 		}
 
-		return toDto(sample);
+		return savedSample;
 	}
 
 	@Override

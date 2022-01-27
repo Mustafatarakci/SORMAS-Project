@@ -22,15 +22,20 @@ import de.symeda.sormas.api.sample.SampleDto;
 import de.symeda.sormas.backend.access.AbstractAccessLogic;
 import de.symeda.sormas.backend.access.AbstractEntityAccess;
 import de.symeda.sormas.backend.access.AccessChangeOperation;
-import de.symeda.sormas.backend.sample.Sample;
+import de.symeda.sormas.backend.access.BaseAccessEntities;
 
 public abstract class SampleAccessLogic extends AbstractAccessLogic {
 
-	public static List<AccessChangeOperation> buildAccessChangeOperations(Sample existingSample, SampleDto updatedSample) {
+	public static List<AccessChangeOperation> buildAccessChangeOperations(BaseAccessEntities sampleAccessEntities, SampleDto updatedSample) {
 
 		List<AccessChangeOperation> changeOperations = new ArrayList<>();
 
-		insertChangeOperation(changeOperations, existingSample.getLab(), updatedSample.getLab(), AbstractEntityAccess.FACILITY, SampleDto.LAB);
+		insertChangeOperation(
+			changeOperations,
+			sampleAccessEntities.getFacility(),
+			updatedSample.getLab(),
+			AbstractEntityAccess.FACILITY,
+			SampleDto.LAB);
 
 		return changeOperations;
 	}

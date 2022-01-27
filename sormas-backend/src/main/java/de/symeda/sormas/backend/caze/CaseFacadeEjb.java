@@ -195,7 +195,7 @@ import de.symeda.sormas.api.utils.fieldvisibility.FieldVisibilityCheckers;
 import de.symeda.sormas.api.visit.VisitDto;
 import de.symeda.sormas.api.visit.VisitResultDto;
 import de.symeda.sormas.api.visit.VisitStatus;
-import de.symeda.sormas.backend.access.AccessChangeOperation;
+import de.symeda.sormas.backend.caze.caseaccess.CaseAccessEntities;
 import de.symeda.sormas.backend.caze.caseaccess.CaseAccessLogic;
 import de.symeda.sormas.backend.caze.caseaccess.CaseAccessService;
 import de.symeda.sormas.backend.caze.classification.CaseClassificationFacadeEjb.CaseClassificationFacadeEjbLocal;
@@ -1506,9 +1506,18 @@ public class CaseFacadeEjb implements CaseFacade {
 
 		externalJournalService.handleExternalJournalPersonUpdateAsync(dto.getPerson());
 
-		List<AccessChangeOperation> accessChangeOperations = null;
+		CaseAccessEntities caseAccessEntities = null;
 		if (existingCaseDto != null) {
-			accessChangeOperations = CaseAccessLogic.buildAccessChangeOperations(existingCaze, dto);
+			caseAccessEntities = (CaseAccessEntities) new CaseAccessEntities().responsibleRegionId(existingCaze.getResponsibleRegion())
+				.responsibleDistrictId(existingCaze.getResponsibleDistrict())
+				.responsibleCommunityId(existingCaze.getResponsibleCommunity())
+				.reportingUserId(existingCaze.getReportingUser())
+				.assignedUser(existingCaze.getSurveillanceOfficer())
+				.region(existingCaze.getRegion())
+				.district(existingCaze.getDistrict())
+				.community(existingCaze.getCommunity())
+				.facility(existingCaze.getHealthFacility())
+				.pointOfEntry(existingCaze.getPointOfEntry());
 		}
 
 		existingCaze = fillOrBuildEntity(dto, existingCaze, checkChangeDate);
@@ -1520,14 +1529,16 @@ public class CaseFacadeEjb implements CaseFacade {
 
 		doSave(existingCaze, handleChanges, existingCaseDto, syncShares);
 
+		CaseDataDto savedCase = convertToDto(existingCaze, Pseudonymizer.getDefault(userService::hasRight));
+
 		// Create access table entries
 		if (existingCaseDto == null) {
 			caseAccessService.insertAccessEntries(existingCaze);
 		} else {
-			caseAccessService.updateAccessEntries(accessChangeOperations, existingCaze);
+			caseAccessService.updateAccessEntries(CaseAccessLogic.buildAccessChangeOperations(caseAccessEntities, savedCase), existingCaze);
 		}
 
-		return convertToDto(existingCaze, Pseudonymizer.getDefault(userService::hasRight));
+		return savedCase;
 	}
 
 	public void syncSharesAsync(ShareTreeCriteria criteria) {
