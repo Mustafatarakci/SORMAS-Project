@@ -101,6 +101,7 @@ import de.symeda.sormas.api.utils.criteria.CriteriaDateType;
 import de.symeda.sormas.api.utils.criteria.ExternalShareDateType;
 import de.symeda.sormas.backend.ExtendedPostgreSQL94Dialect;
 import de.symeda.sormas.backend.caze.CaseFacadeEjb.CaseFacadeEjbLocal;
+import de.symeda.sormas.backend.caze.caseaccess.CaseAccessService;
 import de.symeda.sormas.backend.caze.transformers.CaseListEntryDtoResultTransformer;
 import de.symeda.sormas.backend.caze.transformers.CaseSelectionDtoResultTransformer;
 import de.symeda.sormas.backend.clinicalcourse.ClinicalCourse;
@@ -192,13 +193,14 @@ public class CaseService extends AbstractCoreAdoService<Case> {
 	private CaseFacadeEjbLocal caseFacade;
 	@EJB
 	private VisitFacadeEjb.VisitFacadeEjbLocal visitFacade;
-
 	@EJB
 	private SormasToSormasShareInfoService sormasToSormasShareInfoService;
 	@EJB
 	private ExternalShareInfoService externalShareInfoService;
 	@EJB
 	private ExternalJournalService externalJournalService;
+	@EJB
+	private CaseAccessService caseAccessService;
 
 	public CaseService() {
 		super(Case.class);
@@ -265,6 +267,78 @@ public class CaseService extends AbstractCoreAdoService<Case> {
 
 		return getBatchedQueryResults(cb, cq, from, batchSize);
 	}
+
+//	public List<Case> getAllActiveCasesAfter(Date date, boolean includeExtendedChangeDateFilters, Integer batchSize, String lastSynchronizedUuid) {
+//
+//		CriteriaBuilder cb = em.getCriteriaBuilder();
+//		CriteriaQuery<Case> cq = cb.createQuery(getElementClass());
+//		Root<Case> from = cq.from(getElementClass());
+//		from.fetch(Case.SYMPTOMS);
+//		from.fetch(Case.THERAPY);
+//		Fetch<Case, ClinicalCourse> clinicalCourseFetch = from.fetch(Case.CLINICAL_COURSE);
+//		clinicalCourseFetch.fetch(ClinicalCourse.HEALTH_CONDITIONS);
+//		from.fetch(Case.HOSPITALIZATION);
+//		from.fetch(Case.EPI_DATA);
+//		from.fetch(Case.PORT_HEALTH_INFO);
+//		from.fetch(Case.MATERNAL_HISTORY);
+//
+//		User currentUser = getCurrentUser();
+//
+//		Predicate filter = createActiveCasesFilter(cb, from);
+//
+//		if (currentUser != null
+//			&& currentUser.getJurisdictionLevel() != JurisdictionLevel.NATION
+//			&& !currentUser.hasAnyUserRole(UserRole.REST_USER, UserRole.REST_EXTERNAL_VISITS_USER)) {
+//
+//			Subquery<Long> accessibleCasesSq = cq.subquery(Long.class);
+//			Root<CaseAccess> accessibleCasesRoot = accessibleCasesSq.from(CaseAccess.class);
+//			accessibleCasesSq.select(accessibleCasesRoot.get(CaseAccess.CAZE).get(AbstractDomainObject.ID));
+//			accessibleCasesSq.where(caseAccessService.getAccessibleCases(cb, accessibleCasesRoot, currentUser));
+//
+//			filter = CriteriaBuilderHelper.and(cb, filter, from.get(AbstractDomainObject.ID).in(accessibleCasesSq));
+//		}
+//
+//		if (currentUser != null) {
+//			if (currentUser.getLimitedDisease() != null) {
+//				filter = CriteriaBuilderHelper.and(cb, filter, cb.equal(from.get(Case.DISEASE), getCurrentUser().getLimitedDisease()));
+//			}
+//			if (UserRole.isPortHealthUser(currentUser.getUserRoles())) {
+//				filter = CriteriaBuilderHelper.and(cb, filter, cb.equal(from.get(Case.CASE_ORIGIN), CaseOrigin.POINT_OF_ENTRY));
+//			}
+//		}
+//
+////		if (getCurrentUser() != null) {
+////			Predicate userFilter = createUserFilter(cb, cq, from);
+////			if (userFilter != null) {
+////				filter = cb.and(filter, userFilter);
+////			}
+////		}
+//
+//		if (date != null) {
+//			Predicate dateFilter =
+//				createChangeDateFilter(cb, from, DateHelper.toTimestampUpper(date), includeExtendedChangeDateFilters, lastSynchronizedUuid);
+//			if (dateFilter != null) {
+//				filter = CriteriaBuilderHelper.and(cb, filter, dateFilter);
+//			}
+//		}
+//
+//		if (featureConfigurationFacade.isFeatureEnabled(FeatureType.NATIONAL_CASE_SHARING)) {
+//			filter = CriteriaBuilderHelper.or(cb, filter, cb.isTrue(from.get(Case.SHARED_TO_COUNTRY)));
+//		}
+//
+//		cq.where(filter);
+//		cq.distinct(true);
+//
+////		List<Case> cases = new LinkedList<>();
+////		IterableHelper.executeBatched(
+////			accessibleEntities.stream().map(AccessibleEntity::getId).collect(Collectors.toList()),
+////			ModelConstants.PARAMETER_LIMIT,
+////			caseIds -> cases.addAll(getCasesByPersonUuids(personUuids)));
+////		return cases;
+//
+//		logger.info(em.createQuery(cq).unwrap(org.hibernate.Query.class).getQueryString());
+//		return getBatchedQueryResults(cb, cq, from, batchSize);
+//	}
 
 	public List<String> getAllActiveUuids() {
 
@@ -868,11 +942,11 @@ public class CaseService extends AbstractCoreAdoService<Case> {
 	 * Creates a filter that excludes all cases that are either {@link Case#archived} or {@link CoreAdo#deleted}.
 	 */
 	public Predicate createActiveCasesFilter(CriteriaBuilder cb, Root<Case> root) {
-		return cb.and(cb.isFalse(root.get(Case.ARCHIVED)), cb.isFalse(root.get(Case.DELETED)));
+		return cb.and(cb.isFalse(root.get(Case.ARCHIVED)), cb.isFalse(root.get(CoreAdo.DELETED)));
 	}
 
 	public Predicate createActiveCasesFilter(CriteriaBuilder cb, Join<?, Case> join) {
-		return cb.and(cb.isFalse(join.get(Case.ARCHIVED)), cb.isFalse(join.get(Case.DELETED)));
+		return cb.and(cb.isFalse(join.get(Case.ARCHIVED)), cb.isFalse(join.get(CoreAdo.DELETED)));
 	}
 
 	/**
@@ -880,7 +954,7 @@ public class CaseService extends AbstractCoreAdoService<Case> {
 	 * This essentially removes {@link CoreAdo#deleted} cases from the queries.
 	 */
 	public Predicate createDefaultFilter(CriteriaBuilder cb, From<?, Case> root) {
-		return cb.isFalse(root.get(Case.DELETED));
+		return cb.isFalse(root.get(CoreAdo.DELETED));
 	}
 
 	@Override

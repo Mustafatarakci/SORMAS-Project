@@ -27,7 +27,6 @@ import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaDelete;
-import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
@@ -36,7 +35,6 @@ import de.symeda.sormas.api.user.JurisdictionLevel;
 import de.symeda.sormas.backend.access.AbstractEntityAccess;
 import de.symeda.sormas.backend.access.AccessChangeOperation;
 import de.symeda.sormas.backend.access.AccessChangeOperationType;
-import de.symeda.sormas.backend.access.AccessibleEntity;
 import de.symeda.sormas.backend.caze.Case;
 import de.symeda.sormas.backend.common.AbstractDomainObject;
 import de.symeda.sormas.backend.common.BaseAdoService;
@@ -54,7 +52,7 @@ public class CaseAccessService extends BaseAdoService<CaseAccess> {
 		super(CaseAccess.class);
 	}
 
-	public List<AccessibleEntity> getAccessibleCases(User user) {
+	public Predicate getAccessibleCases(CriteriaBuilder cb, Root<CaseAccess> root, User user) {
 
 		JurisdictionLevel jurisdictionLevel = user.getJurisdictionLevel();
 
@@ -62,11 +60,11 @@ public class CaseAccessService extends BaseAdoService<CaseAccess> {
 			throw new UnsupportedOperationException("User with ID " + user.getId() + " has no or national jurisdiction and can access all entities.");
 		}
 
-		CriteriaBuilder cb = em.getCriteriaBuilder();
-		CriteriaQuery<AccessibleEntity> cq = cb.createQuery(AccessibleEntity.class);
-		Root<CaseAccess> root = cq.from(CaseAccess.class);
-
-		cq.multiselect(root.get(CaseAccess.CAZE).get(AbstractDomainObject.ID), root.get(AbstractEntityAccess.PSEUDONYMIZED));
+//		CriteriaBuilder cb = em.getCriteriaBuilder();
+//		CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+//		Root<CaseAccess> root = cq.from(CaseAccess.class);
+//
+//		cq.select(root.get(CaseAccess.CAZE).get(AbstractDomainObject.ID));
 
 		/* Responsible user */
 		Predicate predicate = cb.equal(root.get(AbstractEntityAccess.REPORTING_USER), user);
@@ -99,10 +97,10 @@ public class CaseAccessService extends BaseAdoService<CaseAccess> {
 			throw new IllegalArgumentException(jurisdictionLevel.toString());
 		}
 
-		cq.where(predicate);
-		cq.distinct(true);
+//		cq.where(predicate);
+//		cq.distinct(true);
 
-		return em.createQuery(cq).getResultList();
+		return predicate;
 	}
 
 	public void insertAccessEntries(Case newCase) {

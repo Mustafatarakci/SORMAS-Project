@@ -471,7 +471,8 @@ public class CaseFacadeEjb implements CaseFacade {
 
 	@Override
 	public List<CaseDataDto> getAllActiveCasesAfter(Date date, Integer batchSize, String lastSynchronizedUuid) {
-		return getAllActiveCasesAfter(date, false, batchSize, lastSynchronizedUuid);
+		List<CaseDataDto> cases = getAllActiveCasesAfter(date, false, batchSize, lastSynchronizedUuid);
+		return cases;
 	}
 
 	private List<CaseDataDto> getAllActiveCasesAfter(
@@ -485,10 +486,8 @@ public class CaseFacadeEjb implements CaseFacade {
 		}
 
 		Pseudonymizer pseudonymizer = Pseudonymizer.getDefault(userService::hasRight);
-		return caseService.getAllActiveCasesAfter(date, includeExtendedChangeDateFilters, batchSize, lastSynchronizedUuid)
-			.stream()
-			.map(c -> convertToDto(c, pseudonymizer))
-			.collect(Collectors.toList());
+		List<Case> cases = caseService.getAllActiveCasesAfter(date, includeExtendedChangeDateFilters, batchSize, lastSynchronizedUuid);
+		return cases.stream().map(c -> convertToDto(c, pseudonymizer)).collect(Collectors.toList());
 	}
 
 	@Override
@@ -2373,7 +2372,7 @@ public class CaseFacadeEjb implements CaseFacade {
 
 		CaseDataDto dto = toDto(source);
 
-		pseudonymizeDto(source, dto, pseudonymizer);
+		//pseudonymizeDto(source, dto, pseudonymizer);
 
 		return dto;
 	}
