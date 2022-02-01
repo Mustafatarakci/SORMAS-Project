@@ -5,6 +5,13 @@
 * [Test execution](#test-execution)
 * [Reporting](#reporting)
 
+## TL;DR
+```
+docker build -t local/jmeter-sormas .`
+$RESULT_DIR=`mktemp -d`
+docker run -it  -v "$RESULT_DIR:/srv/out"  local/jmeter-sormas
+```
+
 ## General info
 
 This project aims to help identify performance issues on the Sormas rest api's.
