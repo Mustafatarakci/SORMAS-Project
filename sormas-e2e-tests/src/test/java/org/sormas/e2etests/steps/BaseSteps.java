@@ -28,7 +28,7 @@ import customreport.reportbuilder.CustomReportBuilder;
 import io.qameta.allure.listener.StepLifecycleListener;
 import io.restassured.RestAssured;
 import io.restassured.parsing.Parser;
-import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.remote.RemoteWebDriver;
@@ -51,13 +51,17 @@ public class BaseSteps implements StepLifecycleListener {
   }
 
   @Before(value = "@UI")
-  public void beforeScenario(Scenario scenario) {
+  public void beforeScenario(Scenario scenario) throws InterruptedException {
     if (isNonApiScenario(scenario)) {
       driver = driverManager.borrowRemoteWebDriver(scenario.getName());
       StepsLogger.setRemoteWebDriver(driver);
       WebDriver.Options options = driver.manage();
-      options.timeouts().setScriptTimeout(Duration.ofMinutes(2));
-      options.timeouts().pageLoadTimeout(Duration.ofMinutes(2));
+      options
+          .timeouts()
+          .setScriptTimeout(2, TimeUnit.MINUTES); // setScriptTimeout(Duration.ofMinutes(2));
+      options
+          .timeouts()
+          .pageLoadTimeout(2, TimeUnit.MINUTES); // pageLoadTimeout(Duration.ofMinutes(2));
       log.info("Browser's resolution: " + driver.manage().window().getSize().toString());
       log.info("Starting test: " + scenario.getName());
     }
