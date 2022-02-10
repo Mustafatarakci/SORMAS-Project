@@ -53,6 +53,7 @@ import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
 import javax.validation.constraints.NotNull;
 
+import de.symeda.sormas.backend.common.AbstractCoreAdoService;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -107,10 +108,10 @@ import de.symeda.sormas.backend.caze.transformers.CaseSelectionDtoResultTransfor
 import de.symeda.sormas.backend.clinicalcourse.ClinicalCourse;
 import de.symeda.sormas.backend.clinicalcourse.ClinicalVisit;
 import de.symeda.sormas.backend.clinicalcourse.ClinicalVisitService;
-import de.symeda.sormas.backend.common.AbstractCoreAdoService;
+import de.symeda.sormas.backend.common.AbstractDeletableAdoService;
 import de.symeda.sormas.backend.common.AbstractDomainObject;
 import de.symeda.sormas.backend.common.ChangeDateFilterBuilder;
-import de.symeda.sormas.backend.common.CoreAdo;
+import de.symeda.sormas.backend.common.DeletableAdo;
 import de.symeda.sormas.backend.common.CriteriaBuilderHelper;
 import de.symeda.sormas.backend.contact.Contact;
 import de.symeda.sormas.backend.contact.ContactQueryContext;
@@ -939,7 +940,7 @@ public class CaseService extends AbstractCoreAdoService<Case> {
 	}
 
 	/**
-	 * Creates a filter that excludes all cases that are either {@link Case#archived} or {@link CoreAdo#deleted}.
+	 * Creates a filter that excludes all cases that are either {@link Case#archived} or {@link DeletableAdo#deleted}.
 	 */
 	public Predicate createActiveCasesFilter(CriteriaBuilder cb, Root<Case> root) {
 		return cb.and(cb.isFalse(root.get(Case.ARCHIVED)), cb.isFalse(root.get(CoreAdo.DELETED)));
@@ -951,7 +952,7 @@ public class CaseService extends AbstractCoreAdoService<Case> {
 
 	/**
 	 * Creates a default filter that should be used as the basis of queries that do not use {@link CaseCriteria}.
-	 * This essentially removes {@link CoreAdo#deleted} cases from the queries.
+	 * This essentially removes {@link DeletableAdo#deleted} cases from the queries.
 	 */
 	public Predicate createDefaultFilter(CriteriaBuilder cb, From<?, Case> root) {
 		return cb.isFalse(root.get(CoreAdo.DELETED));
@@ -1318,7 +1319,7 @@ public class CaseService extends AbstractCoreAdoService<Case> {
 				statusChangedBySystem = true;
 			}
 		} else {
-			CaseDataDto caseDto = CaseFacadeEjbLocal.toDto(caze);
+			CaseDataDto caseDto = caseFacade.toDto(caze);
 			Date currentFollowUpUntil = caseDto.getFollowUpUntil();
 
 			Date earliestSampleDate = null;
@@ -1958,5 +1959,4 @@ public class CaseService extends AbstractCoreAdoService<Case> {
 		CriteriaQuery cq = caseQueryContext.getQuery();
 		cq.multiselect(listQueryBuilder.getCaseIndexSelections((Root<Case>) caseQueryContext.getRoot(), caseQueryContext));
 	}
-
 }

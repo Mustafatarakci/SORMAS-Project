@@ -25,6 +25,7 @@ import javax.ejb.EJB;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 
+import de.symeda.sormas.backend.deletionconfiguration.CoreEntityDeletionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,6 +82,8 @@ public class CronService {
 	private CentralInfraSyncFacade centralInfraSyncFacade;
 	@EJB
 	private CaseAccessService caseAccessService;
+@EJB
+	private CoreEntityDeletionService coreEntityDeletionService;
 
 	@Schedule(hour = "*", minute = "*/" + TASK_UPDATE_INTERVAL, second = "0", persistent = false)
 	public void sendNewAndDueTaskMessages() {
@@ -192,5 +195,11 @@ public class CronService {
 	@Schedule(hour = "1", minute = "55", persistent = false)
 	public void deleteEmptyAccessEntries() {
 		caseAccessService.deleteEmptyAccessEntries();
+	}
+
+
+	@Schedule(hour = "1", minute =  "55", persistent = false)
+	public void deleteExpiredEntities(){
+		coreEntityDeletionService.executeAutomaticDeletion();
 	}
 }

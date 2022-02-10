@@ -87,7 +87,7 @@
     <string name="action_pick_gps">پتے کے لیے موجودہ GPS کا انتخاب کریں</string>
     <string name="action_redownload_app">دوبارہ ڈاؤن لوڈ کریں</string>
     <string name="action_redownload_app_later">بعد میں دوبارہ ڈاؤن لوڈ کری</string>
-    <string name="action_refer_case_from_poe">ملک میں داخلے کا جگہ  سے کیس کا حوالہ دیں</string>
+    <string name="action_refer_case_from_poe">داخلے کا جگہ سے کیس کا حوالہ دیں</string>
     <string name="action_report">مسئلے سے آگاہ کیجئے</string>
     <string name="action_repull_data">ڈیٹا کو دوبارہ سنکرونائز کریں</string>
     <string name="action_reset_filters">فلٹرز کو دوبارہ ترتیب دیں</string>
@@ -360,7 +360,7 @@
     <string name="heading_prescription_new">نیا نسخہ</string>
     <string name="heading_previous_hospitalization">گزشتہ ہسپتال میں داخلہ</string>
     <string name="heading_previous_hospitalizations">گزشتہ ہسپتال میں داخلے</string>
-    <string name="heading_refer_case_from_poe">ملک میں داخلے کی جگہ  سے کیس کا حوالہ دیں</string>
+    <string name="heading_refer_case_from_poe">داخلے کی جگہ سے کیس کا حوالہ دیں</string>
     <string name="heading_reset_PIN">پن کو دوبارہ ترتیب دیں</string>
     <string name="heading_response_management">رسپانس مینجمنٹ اور تجزیہ کا نظام</string>
     <string name="heading_sample_edit">نمونہ میں ترمیم کریں</string>
@@ -492,7 +492,7 @@
     <string name="main_menu_tasks">کام</string>
     <string name="main_menu_aggregate_reports">mSERS</string>
     <string name="message_already_saving">پہلے ہی محفوظ کر رہا ہے..</string>
-    <string name="message_case_infrastructure_data_changed">آپ نے اس کیس کا انفراسٹرکچر ڈیٹا تبدیل کر دیا ہے۔ کیا آپ کیس کو صحت کی نئے سہولت کار جگہ میں منتقل کرنا چاہتے ہیں (اسپتال میں داخے کا ڈیٹا اپ ڈیٹ کیا جائے گا) یا آپ صرف غلطی کو درست کرنے کے لیے ڈیٹا میں ترمیم کرنا چاہتے ہیں؟</string>
+    <string name="message_case_infrastructure_data_changed">آپ نے اس کیس کا انفراسٹرکچر ڈیٹا تبدیل کر دیا ہے۔ کیا آپ کیس کو صحت کی نئی سہولت گاہ میں منتقل کرنا چاہتے ہیں (اسپتال میں داخے کا ڈیٹا اپ ڈیٹ کیا جائے گا) یا آپ صرف غلطی کو درست کرنے کے لیے ڈیٹا میں ترمیم کرنا چاہتے ہیں؟</string>
     <string name="message_download_app_failed">نئے سورماس ورژن کا ڈاؤن لوڈ ناکام ہو گیا۔ براہ مہربانی یقینی بنائیں کہ آپ کے پاس ممکنہ طور پر بہترین انٹرنیٹ کنکشن ہے اور دوبارہ کوشش کریں یا کسی سپروائزر کو مطلع کریں اگر آپ اچھے انٹرنیٹ کنکشن کے باوجود یہ خرابی ملتی رہتی ہے۔</string>
     <string name="message_empty_password">براہ مہربانی پاس ورڈ درج کریں۔</string>
     <string name="message_empty_username">براہ مہربانی ایک صارفی نام درج کریں۔</string>
@@ -605,7 +605,7 @@
     <string name="value_disease_unknown">بیماری دستیاب نہیں ہے</string>
     <string name="value_event_unknown">تقریب موجود نہیں ہے</string>
     <string name="value_executing_clinician_unknown">ذمہ دارمعالج دستیاب نہیں</string>
-    <string name="value_facility_unknown">سہولت کار جگہ  دستیاب نہیں</string>
+    <string name="value_facility_unknown">سہولت گاہ  دستیاب نہیں</string>
     <string name="value_frequency_unknown">تعدد دستیاب نہیں ہے</string>
     <string name="value_sex_unknown">جنسی معلومات دستیاب نہیں ہے</string>
     <string name="value_heart_rate_unknown">دل کی دہڑکن کی شرح کی معلومات دستیاب نہیں ہے</string>
@@ -617,7 +617,7 @@
     <string name="value_no_username">کوئی صارفی نام موجود نہیں ہے</string>
     <string name="value_not_available">دستیاب نہیں ہے</string>
     <string name="value_person_unknown">شخص دستیاب نہیں ہے</string>
-    <string name="value_point_of_entry_unknown">ملک میں داخلے کا جگہ دستیاب نہیں ہے</string>
+    <string name="value_point_of_entry_unknown">داخلے کا جگہ دستیاب نہیں ہے</string>
     <string name="value_prescribing_clinician_unknown">تجویز کرنے والا معالج  دستیاب نہیں ہے</string>
     <string name="value_prescription_date_unknown">نسخہ جاری کرنے کی تاریخ دستیاب نہیں ہے</string>
     <string name="value_prescription_period_unknown">نسخے کی مدت دستیاب نہیں ہے</string>
@@ -643,8 +643,8 @@
     <string name="no_camera_permission">کیمرے کی اجازت نہیں ہے</string>
     <string name="permission_camera_rationale">پتہ لگانے کے لیے کیمرے تک رسائی درکار ہے</string>
     <string name="scan_field_sample_id">فیلڈ سامپل آئی ڈی اسکین کریں</string>
-    <string name="caption_facility_type_group">سہولت کار جگہ کی قسم </string>
-    <string name="caption_facility_type">سہولت کار جگہ کی قسم </string>
+    <string name="caption_facility_type_group">سہولت گاہ کی قسم </string>
+    <string name="caption_facility_type">سہولت گاہ کی قسم </string>
     <string name="value_vaccine_date_unknown">ویکسینیشن کی تاریخ دستیاب نہیں ہے</string>
     <string name="value_vaccine_name_unknown">ویکسین دستیاب نہیں</string>
     <string name="value_vaccine_manufacturer_unknown">مینوفیکچرر دستیاب نہیں ہے</string>
