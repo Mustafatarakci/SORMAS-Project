@@ -125,7 +125,7 @@ public abstract class AbstractCoreFacadeEjb<ADO extends CoreAdo, DTO extends Ent
 	public DTO convertToDto(ADO source, Pseudonymizer pseudonymizer) {
 
 		DTO dto = toDto(source);
-		pseudonymizeDto(source, dto, pseudonymizer);
+		//pseudonymizeDto(source, dto, pseudonymizer);
 		return dto;
 	}
 
@@ -161,12 +161,12 @@ public abstract class AbstractCoreFacadeEjb<ADO extends CoreAdo, DTO extends Ent
 
 	protected String getDeleteReferenceField(DeletionReference deletionReference) {
 		switch (deletionReference) {
-			case CREATION:
-				return AbstractDomainObject.CREATION_DATE;
-			case END:
-				return AbstractDomainObject.CHANGE_DATE;
-			default:
-				throw new IllegalArgumentException("deletion reference " + deletionReference + " not supported in " + getClass().getSimpleName());
+		case CREATION:
+			return AbstractDomainObject.CREATION_DATE;
+		case END:
+			return AbstractDomainObject.CHANGE_DATE;
+		default:
+			throw new IllegalArgumentException("deletion reference " + deletionReference + " not supported in " + getClass().getSimpleName());
 		}
 	}
 

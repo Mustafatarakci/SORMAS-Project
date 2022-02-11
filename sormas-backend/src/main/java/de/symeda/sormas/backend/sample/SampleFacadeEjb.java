@@ -37,7 +37,6 @@ import javax.persistence.criteria.Selection;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
-import de.symeda.sormas.backend.event.EventFacadeEjb;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,8 +80,8 @@ import de.symeda.sormas.backend.caze.CaseQueryContext;
 import de.symeda.sormas.backend.caze.CaseService;
 import de.symeda.sormas.backend.caze.caseaccess.CaseAccessService;
 import de.symeda.sormas.backend.common.AbstractDomainObject;
-import de.symeda.sormas.backend.common.CoreAdo;
 import de.symeda.sormas.backend.common.CriteriaBuilderHelper;
+import de.symeda.sormas.backend.common.DeletableAdo;
 import de.symeda.sormas.backend.common.messaging.MessageContents;
 import de.symeda.sormas.backend.common.messaging.MessageSubject;
 import de.symeda.sormas.backend.common.messaging.MessagingService;
@@ -419,11 +418,7 @@ public class SampleFacadeEjb implements SampleFacade {
 
 		return sampleService.findBy(criteria, userService.getCurrentUser(), AbstractDomainObject.CREATION_DATE, false)
 			.stream()
-			.collect(
-				Collectors.toMap(
-					s -> associatedObjectFn.apply(s).getUuid(),
-					s -> s,
-					(s1, s2) -> {
+			.collect(Collectors.toMap(s -> associatedObjectFn.apply(s).getUuid(), s -> s, (s1, s2) -> {
 
 				// keep the positive one
 				if (s1.getPathogenTestResult() == PathogenTestResultType.POSITIVE) {
@@ -600,7 +595,7 @@ public class SampleFacadeEjb implements SampleFacade {
 		} else if (caseCriteria != null) {
 			Predicate criteriaFilter = caseService.createCriteriaFilter(caseCriteria, new CaseQueryContext<>(cb, cq, joins.getCaze()));
 			filter = CriteriaBuilderHelper.and(cb, filter, criteriaFilter);
-			filter = CriteriaBuilderHelper.and(cb, filter, cb.isFalse(sampleRoot.get(CoreAdo.DELETED)));
+			filter = CriteriaBuilderHelper.and(cb, filter, cb.isFalse(sampleRoot.get(DeletableAdo.DELETED)));
 			filter = CriteriaBuilderHelper.andInValues(selectedRows, filter, cb, joins.getCaze().get(AbstractDomainObject.UUID));
 		}
 
@@ -1023,7 +1018,7 @@ public class SampleFacadeEjb implements SampleFacade {
 		CriteriaQuery<Long> cq = cb.createQuery(Long.class);
 		Root<Sample> from = cq.from(Sample.class);
 
-		cq.where(cb.and(cb.isTrue(from.get(CoreAdo.DELETED)), cb.equal(from.get(AbstractDomainObject.UUID), sampleUuid)));
+		cq.where(cb.and(cb.isTrue(from.get(DeletableAdo.DELETED)), cb.equal(from.get(AbstractDomainObject.UUID), sampleUuid)));
 		cq.select(cb.count(from));
 		long count = em.createQuery(cq).getSingleResult();
 		return count > 0;

@@ -9798,93 +9798,6 @@ ALTER TABLE weeklyreportentry_history ALTER COLUMN creationdate TYPE timestamp(3
 
 INSERT INTO schema_version (version_number, comment) VALUES (436, 'Set timestamp precision to milliseconds #7303');
 
--- 2022-01-24 Add case access table #7719
-CREATE TABLE cases_access (
-    id bigint not null,
-    uuid varchar(36) not null unique,
-    changedate timestamp not null,
-    creationdate timestamp not null,
-    reportinguser_id bigint,
-    assigneduser_id bigint,
-    region_id bigint,
-    district_id bigint,
-    community_id bigint,
-    facility_id bigint,
-    pointofentry_id bigint,
-    pseudonymized boolean,
-    primarydata boolean,
-    caze_id bigint,
-    contact_id bigint,
-    sample_id bigint,
-    primary key(id));
-ALTER TABLE cases_access OWNER TO sormas_user;
-
-ALTER TABLE cases_access ADD CONSTRAINT fk_cases_access_reportinguser_id FOREIGN KEY (reportinguser_id) REFERENCES users(id);
-ALTER TABLE cases_access ADD CONSTRAINT fk_cases_access_assigneduser_id FOREIGN KEY (assigneduser_id) REFERENCES users(id);
-ALTER TABLE cases_access ADD CONSTRAINT fk_cases_access_region_id FOREIGN KEY (region_id) REFERENCES region(id);
-ALTER TABLE cases_access ADD CONSTRAINT fk_cases_access_district_id FOREIGN KEY (district_id) REFERENCES district(id);
-ALTER TABLE cases_access ADD CONSTRAINT fk_cases_access_community_id FOREIGN KEY (community_id) REFERENCES community(id);
-ALTER TABLE cases_access ADD CONSTRAINT fk_cases_access_facility_id FOREIGN KEY (facility_id) REFERENCES facility(id);
-ALTER TABLE cases_access ADD CONSTRAINT fk_cases_access_pointofentry_id FOREIGN KEY (pointofentry_id) REFERENCES pointofentry(id);
-ALTER TABLE cases_access ADD CONSTRAINT fk_cases_access_caze_id FOREIGN KEY (caze_id) REFERENCES cases(id);
-ALTER TABLE cases_access ADD CONSTRAINT fk_cases_access_contact_id FOREIGN KEY (contact_id) REFERENCES contact(id);
-ALTER TABLE cases_access ADD CONSTRAINT fk_cases_access_sample_id FOREIGN KEY (sample_id) REFERENCES samples(id);
-
-/* Create basic access entries */
-DO $$
-    DECLARE case_info RECORD;
-    BEGIN
-        FOR case_info IN SELECT id, reportinguser_id, surveillanceofficer_id, responsibleregion_id, responsibledistrict_id,
-                                responsiblecommunity_id, healthfacility_id, pointofentry_id, region_id, district_id,
-                                community_id FROM cases WHERE deleted IS FALSE
-        LOOP
-            INSERT INTO cases_access (id, uuid, changedate, creationdate, caze_id, reportinguser_id, assigneduser_id, region_id, district_id,
-                                      community_id, facility_id, pointofentry_id, pseudonymized, primarydata)
-            VALUES (nextval('entity_seq'), generate_base32_uuid(), now(), now(), case_info.id, case_info.reportinguser_id, case_info.surveillanceofficer_id,
-                    case_info.responsibleregion_id, case_info.responsibledistrict_id, case_info.responsiblecommunity_id, case_info.healthfacility_id,
-                    case_info.pointofentry_id, false, true);
-
-            IF (case_info.region_id IS NOT NULL) THEN
-                INSERT INTO cases_access (id, uuid, changedate, creationdate, caze_id, region_id, district_id, community_id, pseudonymized, primarydata)
-                VALUES (nextval('entity_seq'), generate_base32_uuid(), now(), now(), case_info.id, case_info.region_id, case_info.district_id,
-                        case_info.community_id, false, false);
-            END IF;
-
-            END LOOP;
-    END;
-$$ LANGUAGE plpgsql;
-
-/* Create additional access entries for contacts */
-DO $$
-    DECLARE contact_info RECORD;
-    BEGIN
-        FOR contact_info IN SELECT id, caze_id, reportinguser_id, contactofficer_id, region_id, district_id, community_id FROM contact
-        WHERE deleted IS FALSE AND caze_id IS NOT NULL
-            LOOP
-                INSERT INTO cases_access (id, uuid, changedate, creationdate, caze_id, contact_id, reportinguser_id, assigneduser_id,
-                                          region_id, district_id, community_id, pseudonymized, primarydata)
-                VALUES (nextval('entity_seq'), generate_base32_uuid(), now(), now(), contact_info.caze_id, contact_info.id, contact_info.reportinguser_id,
-                        contact_info.contactofficer_id, contact_info.region_id, contact_info.district_id, contact_info.community_id, true, false);
-            END LOOP;
-    END;
-$$ LANGUAGE plpgsql;
-
-/* Create additional access entries for samples */
-DO $$
-    DECLARE sample_info RECORD;
-    BEGIN
-        FOR sample_info IN SELECT id, associatedcase_id, lab_id FROM samples WHERE deleted IS FALSE AND associatedcase_id IS NOT NULL AND lab_id IS NOT NULL
-            LOOP
-                INSERT INTO cases_access (id, uuid, changedate, creationdate, caze_id, sample_id, facility_id, pseudonymized, primarydata)
-                VALUES (nextval('entity_seq'), generate_base32_uuid(), now(), now(), sample_info.associatedcase_id, sample_info.id, sample_info.lab_id, true, false);
-            END LOOP;
-    END;
-$$ LANGUAGE plpgsql;
-
-INSERT INTO schema_version (version_number, comment) VALUES (437, 'Add case access table #7719');
-
--- WHAT ABOUT INDEXES?
-
 -- 2022-01-25 Add configurations for each entity to trigger automated deletion #7008
 CREATE TABLE deletionconfiguration(
                                      id bigint not null,
@@ -9906,7 +9819,7 @@ CREATE TRIGGER versioning_trigger
     FOR EACH ROW EXECUTE PROCEDURE versioning('sys_period', 'deletionconfiguration_history', true);
 ALTER TABLE deletionconfiguration_history OWNER TO sormas_user;
 
-INSERT INTO schema_version (version_number, comment) VALUES (438, 'Add configurations for each entity to trigger automated deletion #7008');
+INSERT INTO schema_version (version_number, comment) VALUES (437, 'Add configurations for each entity to trigger automated deletion #7008');
 
 -- 2022-02-04 Create missing history tables for entities #7113
 ALTER TABLE community ADD COLUMN sys_period tstzrange;
@@ -10017,7 +9930,7 @@ BEFORE INSERT OR UPDATE OR DELETE ON subcontinent
 FOR EACH ROW EXECUTE PROCEDURE versioning('sys_period', 'subcontinent_history', true);
 ALTER TABLE subcontinent_history OWNER TO sormas_user;
 
-INSERT INTO schema_version (version_number, comment) VALUES (439, 'Create missing history tables for entities #7113');
+INSERT INTO schema_version (version_number, comment) VALUES (438, 'Create missing history tables for entities #7113');
 
 ALTER TABLE testreport ADD COLUMN testeddiseasevariant varchar(255);
 ALTER TABLE testreport ADD COLUMN testeddiseasevariantdetails varchar(255);
@@ -10025,7 +9938,7 @@ ALTER TABLE testreport ADD COLUMN testeddiseasevariantdetails varchar(255);
 ALTER TABLE testreport_history ADD COLUMN testeddiseasevariant varchar(255);
 ALTER TABLE testreport_history ADD COLUMN testeddiseasevariantdetails varchar(255);
 
-INSERT INTO schema_version (version_number, comment) VALUES (440, 'Add disease variant mapping to test reports #7209');
+INSERT INTO schema_version (version_number, comment) VALUES (439, 'Add disease variant mapping to test reports #7209');
 
 -- 2022-02-02 Refactor CoreAdo to include archiving #7246
 
@@ -10034,5 +9947,94 @@ ALTER TABLE contact_history ADD COLUMN archived BOOLEAN;
 ALTER TABLE eventparticipant ADD COLUMN archived BOOLEAN;
 ALTER TABLE eventparticipant_history ADD COLUMN archived BOOLEAN;
 
-INSERT INTO schema_version (version_number, comment) VALUES (441, 'Refactor CoreAdo to include archiving #7246');
+INSERT INTO schema_version (version_number, comment) VALUES (440, 'Refactor CoreAdo to include archiving #7246');
+
+
+-- 2022-01-24 Add case access table #7719
+CREATE TABLE cases_access (
+                              id bigint not null,
+                              uuid varchar(36) not null unique,
+                              changedate timestamp not null,
+                              creationdate timestamp not null,
+                              reportinguser_id bigint,
+                              assigneduser_id bigint,
+                              region_id bigint,
+                              district_id bigint,
+                              community_id bigint,
+                              facility_id bigint,
+                              pointofentry_id bigint,
+                              pseudonymized boolean,
+                              primarydata boolean,
+                              caze_id bigint,
+                              contact_id bigint,
+                              sample_id bigint,
+                              primary key(id));
+ALTER TABLE cases_access OWNER TO sormas_user;
+
+ALTER TABLE cases_access ADD CONSTRAINT fk_cases_access_reportinguser_id FOREIGN KEY (reportinguser_id) REFERENCES users(id);
+ALTER TABLE cases_access ADD CONSTRAINT fk_cases_access_assigneduser_id FOREIGN KEY (assigneduser_id) REFERENCES users(id);
+ALTER TABLE cases_access ADD CONSTRAINT fk_cases_access_region_id FOREIGN KEY (region_id) REFERENCES region(id);
+ALTER TABLE cases_access ADD CONSTRAINT fk_cases_access_district_id FOREIGN KEY (district_id) REFERENCES district(id);
+ALTER TABLE cases_access ADD CONSTRAINT fk_cases_access_community_id FOREIGN KEY (community_id) REFERENCES community(id);
+ALTER TABLE cases_access ADD CONSTRAINT fk_cases_access_facility_id FOREIGN KEY (facility_id) REFERENCES facility(id);
+ALTER TABLE cases_access ADD CONSTRAINT fk_cases_access_pointofentry_id FOREIGN KEY (pointofentry_id) REFERENCES pointofentry(id);
+ALTER TABLE cases_access ADD CONSTRAINT fk_cases_access_caze_id FOREIGN KEY (caze_id) REFERENCES cases(id);
+ALTER TABLE cases_access ADD CONSTRAINT fk_cases_access_contact_id FOREIGN KEY (contact_id) REFERENCES contact(id);
+ALTER TABLE cases_access ADD CONSTRAINT fk_cases_access_sample_id FOREIGN KEY (sample_id) REFERENCES samples(id);
+
+/* Create basic access entries */
+DO $$
+    DECLARE case_info RECORD;
+    BEGIN
+        FOR case_info IN SELECT id, reportinguser_id, surveillanceofficer_id, responsibleregion_id, responsibledistrict_id,
+                                responsiblecommunity_id, healthfacility_id, pointofentry_id, region_id, district_id,
+                                community_id FROM cases WHERE deleted IS FALSE
+            LOOP
+                INSERT INTO cases_access (id, uuid, changedate, creationdate, caze_id, reportinguser_id, assigneduser_id, region_id, district_id,
+                                          community_id, facility_id, pointofentry_id, pseudonymized, primarydata)
+                VALUES (nextval('entity_seq'), generate_base32_uuid(), now(), now(), case_info.id, case_info.reportinguser_id, case_info.surveillanceofficer_id,
+                        case_info.responsibleregion_id, case_info.responsibledistrict_id, case_info.responsiblecommunity_id, case_info.healthfacility_id,
+                        case_info.pointofentry_id, false, true);
+
+                IF (case_info.region_id IS NOT NULL) THEN
+                    INSERT INTO cases_access (id, uuid, changedate, creationdate, caze_id, region_id, district_id, community_id, pseudonymized, primarydata)
+                    VALUES (nextval('entity_seq'), generate_base32_uuid(), now(), now(), case_info.id, case_info.region_id, case_info.district_id,
+                            case_info.community_id, false, false);
+                END IF;
+
+            END LOOP;
+    END;
+$$ LANGUAGE plpgsql;
+
+/* Create additional access entries for contacts */
+DO $$
+    DECLARE contact_info RECORD;
+    BEGIN
+        FOR contact_info IN SELECT id, caze_id, reportinguser_id, contactofficer_id, region_id, district_id, community_id FROM contact
+                            WHERE deleted IS FALSE AND caze_id IS NOT NULL
+            LOOP
+                INSERT INTO cases_access (id, uuid, changedate, creationdate, caze_id, contact_id, reportinguser_id, assigneduser_id,
+                                          region_id, district_id, community_id, pseudonymized, primarydata)
+                VALUES (nextval('entity_seq'), generate_base32_uuid(), now(), now(), contact_info.caze_id, contact_info.id, contact_info.reportinguser_id,
+                        contact_info.contactofficer_id, contact_info.region_id, contact_info.district_id, contact_info.community_id, true, false);
+            END LOOP;
+    END;
+$$ LANGUAGE plpgsql;
+
+/* Create additional access entries for samples */
+DO $$
+    DECLARE sample_info RECORD;
+    BEGIN
+        FOR sample_info IN SELECT id, associatedcase_id, lab_id FROM samples WHERE deleted IS FALSE AND associatedcase_id IS NOT NULL AND lab_id IS NOT NULL
+            LOOP
+                INSERT INTO cases_access (id, uuid, changedate, creationdate, caze_id, sample_id, facility_id, pseudonymized, primarydata)
+                VALUES (nextval('entity_seq'), generate_base32_uuid(), now(), now(), sample_info.associatedcase_id, sample_info.id, sample_info.lab_id, true, false);
+            END LOOP;
+    END;
+$$ LANGUAGE plpgsql;
+
+INSERT INTO schema_version (version_number, comment) VALUES (441, 'Add case access table #7719');
+
+-- WHAT ABOUT INDEXES?
+
 -- *** Insert new sql commands BEFORE this line. Remember to always consider _history tables. ***

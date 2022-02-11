@@ -53,7 +53,6 @@ import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
 import javax.validation.constraints.NotNull;
 
-import de.symeda.sormas.backend.common.AbstractCoreAdoService;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -108,11 +107,11 @@ import de.symeda.sormas.backend.caze.transformers.CaseSelectionDtoResultTransfor
 import de.symeda.sormas.backend.clinicalcourse.ClinicalCourse;
 import de.symeda.sormas.backend.clinicalcourse.ClinicalVisit;
 import de.symeda.sormas.backend.clinicalcourse.ClinicalVisitService;
-import de.symeda.sormas.backend.common.AbstractDeletableAdoService;
+import de.symeda.sormas.backend.common.AbstractCoreAdoService;
 import de.symeda.sormas.backend.common.AbstractDomainObject;
 import de.symeda.sormas.backend.common.ChangeDateFilterBuilder;
-import de.symeda.sormas.backend.common.DeletableAdo;
 import de.symeda.sormas.backend.common.CriteriaBuilderHelper;
+import de.symeda.sormas.backend.common.DeletableAdo;
 import de.symeda.sormas.backend.contact.Contact;
 import de.symeda.sormas.backend.contact.ContactQueryContext;
 import de.symeda.sormas.backend.contact.ContactService;
@@ -943,11 +942,11 @@ public class CaseService extends AbstractCoreAdoService<Case> {
 	 * Creates a filter that excludes all cases that are either {@link Case#archived} or {@link DeletableAdo#deleted}.
 	 */
 	public Predicate createActiveCasesFilter(CriteriaBuilder cb, Root<Case> root) {
-		return cb.and(cb.isFalse(root.get(Case.ARCHIVED)), cb.isFalse(root.get(CoreAdo.DELETED)));
+		return cb.and(cb.isFalse(root.get(Case.ARCHIVED)), cb.isFalse(root.get(DeletableAdo.DELETED)));
 	}
 
 	public Predicate createActiveCasesFilter(CriteriaBuilder cb, Join<?, Case> join) {
-		return cb.and(cb.isFalse(join.get(Case.ARCHIVED)), cb.isFalse(join.get(CoreAdo.DELETED)));
+		return cb.and(cb.isFalse(join.get(Case.ARCHIVED)), cb.isFalse(join.get(DeletableAdo.DELETED)));
 	}
 
 	/**
@@ -955,7 +954,7 @@ public class CaseService extends AbstractCoreAdoService<Case> {
 	 * This essentially removes {@link DeletableAdo#deleted} cases from the queries.
 	 */
 	public Predicate createDefaultFilter(CriteriaBuilder cb, From<?, Case> root) {
-		return cb.isFalse(root.get(CoreAdo.DELETED));
+		return cb.isFalse(root.get(DeletableAdo.DELETED));
 	}
 
 	@Override

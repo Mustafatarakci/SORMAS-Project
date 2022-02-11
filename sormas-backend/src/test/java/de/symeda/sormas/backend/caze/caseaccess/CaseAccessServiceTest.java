@@ -119,7 +119,7 @@ public class CaseAccessServiceTest extends AbstractBeanTest {
 		CaseDataDto caze2 = creator.createCase(survOff1.toReference(), rdcf1, null);
 
 		caze.setReportingUser(survOff2.toReference());
-		caze = getCaseFacade().saveCase(caze);
+		caze = getCaseFacade().save(caze);
 		caseAccesses = getCaseAccessService().getAll();
 		assertThat(caseAccesses.size(), is(2));
 		assertThat(
@@ -136,7 +136,7 @@ public class CaseAccessServiceTest extends AbstractBeanTest {
 		caze.setDistrict(rdcf3.district);
 		caze.setHealthFacility(rdcf3.facility);
 		caze.setPointOfEntry(rdcf3.pointOfEntry);
-		caze = getCaseFacade().saveCase(caze);
+		caze = getCaseFacade().save(caze);
 		caseAccesses = getCaseAccessService().getAll();
 		assertThat(caseAccesses.size(), is(3));
 		CaseAccess primaryAccess = caseAccesses.stream()
@@ -162,7 +162,7 @@ public class CaseAccessServiceTest extends AbstractBeanTest {
 		caze.setResponsibleRegion(rdcf3.region);
 		caze.setResponsibleDistrict(rdcf3.district);
 		caze.setResponsibleCommunity(rdcf3.community);
-		caze = getCaseFacade().saveCase(caze);
+		caze = getCaseFacade().save(caze);
 		caseAccesses = getCaseAccessService().getAll();
 		assertThat(caseAccesses.size(), is(3));
 		primaryAccess = caseAccesses.stream()
@@ -184,7 +184,7 @@ public class CaseAccessServiceTest extends AbstractBeanTest {
 		caze.setDistrict(null);
 		caze.setHealthFacility(rdcf3.facility);
 		caze.setPointOfEntry(rdcf3.pointOfEntry);
-		getCaseFacade().saveCase(caze);
+		getCaseFacade().save(caze);
 		caseAccesses = getCaseAccessService().getAll();
 		assertThat(caseAccesses.size(), is(3));
 		secondaryAccess = caseAccesses.stream()
@@ -212,7 +212,7 @@ public class CaseAccessServiceTest extends AbstractBeanTest {
 		caze.setDistrict(null);
 		caze.setCommunity(null);
 		caze.setHealthFacility(rdcf1.facility);
-		getCaseFacade().saveCase(caze);
+		getCaseFacade().save(caze);
 		getCaseAccessService().deleteEmptyAccessEntries();
 		caseAccesses = getCaseAccessService().getAll();
 		assertThat(caseAccesses.size(), is(1));
@@ -263,7 +263,7 @@ public class CaseAccessServiceTest extends AbstractBeanTest {
 		contact.setRegion(rdcf3.region);
 		contact.setDistrict(rdcf3.district);
 		contact.setCommunity(rdcf3.community);
-		contact = getContactFacade().saveContact(contact);
+		contact = getContactFacade().save(contact);
 		List<CaseAccess> caseAccesses = getCaseAccessService().getAll();
 		assertThat(caseAccesses.size(), is(2));
 		CaseAccess contactAccess = caseAccesses.stream().filter(a -> a.getContact() != null).findFirst().orElseThrow(RuntimeException::new);
@@ -275,7 +275,7 @@ public class CaseAccessServiceTest extends AbstractBeanTest {
 		contact.setRegion(null);
 		contact.setDistrict(null);
 		contact.setCommunity(null);
-		contact = getContactFacade().saveContact(contact);
+		contact = getContactFacade().save(contact);
 		caseAccesses = getCaseAccessService().getAll();
 		assertThat(caseAccesses.size(), is(2));
 		contactAccess = caseAccesses.stream().filter(a -> a.getContact() != null).findFirst().orElseThrow(RuntimeException::new);
@@ -285,7 +285,7 @@ public class CaseAccessServiceTest extends AbstractBeanTest {
 
 		CaseDataDto caze2 = creator.createCase(survOff2.toReference(), rdcf2, null);
 		contact.setCaze(caze2.toReference());
-		contact = getContactFacade().saveContact(contact);
+		contact = getContactFacade().save(contact);
 		caseAccesses = getCaseAccessService().getAll();
 		assertThat(caseAccesses.size(), is(3));
 		assertThat(
@@ -296,7 +296,7 @@ public class CaseAccessServiceTest extends AbstractBeanTest {
 		contact.setCaze(null);
 		contact.setRegion(rdcf1.region);
 		contact.setDistrict(rdcf1.district);
-		getContactFacade().saveContact(contact);
+		getContactFacade().save(contact);
 		assertThat(getCaseAccessService().getAll().size(), is(2));
 	}
 
