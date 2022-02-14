@@ -1321,6 +1321,9 @@ public class CaseController {
 			}
 		});
 
+		view.getCommitButton().setVisible(false);
+		view.getDiscardButton().setVisible(false);
+
 		return view;
 	}
 
