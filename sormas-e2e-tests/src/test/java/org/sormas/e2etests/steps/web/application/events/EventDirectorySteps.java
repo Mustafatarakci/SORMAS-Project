@@ -56,7 +56,7 @@ public class EventDirectorySteps implements En {
         });
 
     When(
-        "API: I chose Region option in Event Group Directory",
+        "I chose Region option in Event Group Directory from API",
         () -> {
           webDriverHelpers.waitForPageLoaded();
           String region = apiState.getCreatedEvent().getEventLocation().getRegion().getUuid();
@@ -85,7 +85,7 @@ public class EventDirectorySteps implements En {
         });
 
     When(
-        "API: I chose District option in Event Group Directory",
+        "I chose District option in Event Group Directory from API",
         () -> {
           webDriverHelpers.waitForPageLoaded();
           String district =
@@ -94,7 +94,7 @@ public class EventDirectorySteps implements En {
         });
 
     When(
-        "API: I chose Community option in Event Group Directory",
+        "I chose Community option in Event Group Directory from API",
         () -> {
           webDriverHelpers.waitForPageLoaded();
           String community = apiState.getCreatedEvent().getEventLocation().getCommunity().getUuid();
@@ -298,7 +298,7 @@ public class EventDirectorySteps implements En {
         });
 
     When(
-        "API: I search last created Event by {string} option filter in Event Group Directory",
+        "I search last created Event by {string} option filter from API in Event Group Directory",
         (String searchCriteria) -> {
           String searchText = "";
           switch (searchCriteria) {
