@@ -880,6 +880,7 @@ public interface Captions {
 	String dashboardWeekBefore = "dashboardWeekBefore";
 	String dashboardYesterday = "dashboardYesterday";
 	String date = "date";
+	String dearchiveReason = "dearchiveReason";
 	String defaultCommunity = "defaultCommunity";
 	String defaultDistrict = "defaultDistrict";
 	String defaultFacility = "defaultFacility";
@@ -979,6 +980,7 @@ public interface Captions {
 	String DocumentTemplate_uploadWorkflowTemplate = "DocumentTemplate.uploadWorkflowTemplate";
 	String documentUploadDocument = "documentUploadDocument";
 	String edit = "edit";
+	String endOfProcessingDate = "endOfProcessingDate";
 	String EpiData = "EpiData";
 	String EpiData_activitiesAsCase = "EpiData.activitiesAsCase";
 	String EpiData_activityAsCaseDetailsKnown = "EpiData.activityAsCaseDetailsKnown";
