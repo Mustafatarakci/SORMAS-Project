@@ -212,7 +212,6 @@ import de.symeda.sormas.backend.clinicalcourse.ClinicalVisitFacadeEjb;
 import de.symeda.sormas.backend.clinicalcourse.ClinicalVisitFacadeEjb.ClinicalVisitFacadeEjbLocal;
 import de.symeda.sormas.backend.clinicalcourse.ClinicalVisitService;
 import de.symeda.sormas.backend.clinicalcourse.HealthConditions;
-import de.symeda.sormas.backend.common.AbstractCoreAdoService;
 import de.symeda.sormas.backend.common.AbstractCoreFacadeEjb;
 import de.symeda.sormas.backend.common.AbstractDomainObject;
 import de.symeda.sormas.backend.common.ConfigFacadeEjb.ConfigFacadeEjbLocal;
@@ -336,8 +335,6 @@ public class CaseFacadeEjb extends AbstractCoreFacadeEjb<Case, CaseDataDto, Case
 
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
-	@EJB
-	private CaseService caseService;
 	@EJB
 	private CaseClassificationFacadeEjbLocal caseClassificationFacade;
 	@EJB
@@ -464,11 +461,6 @@ public class CaseFacadeEjb extends AbstractCoreFacadeEjb<Case, CaseDataDto, Case
 	@Inject
 	public CaseFacadeEjb(CaseService service, UserService userService) {
 		super(Case.class, CaseDataDto.class, service, userService);
-	}
-
-	@Override
-	public AbstractCoreAdoService<Case> getEntityService() {
-		return caseService;
 	}
 
 	@Override
@@ -3403,12 +3395,12 @@ public class CaseFacadeEjb extends AbstractCoreFacadeEjb<Case, CaseDataDto, Case
 		Root<Case> from = cq.from(Case.class);
 
 		Timestamp notChangedTimestamp = Timestamp.valueOf(notChangedSince.atStartOfDay());
-		cq.where(cb.equal(from.get(Case.ARCHIVED), false), cb.not(caseService.createChangeDateFilter(cb, from, notChangedTimestamp, true)));
+		cq.where(cb.equal(from.get(Case.ARCHIVED), false), cb.not(service.createChangeDateFilter(cb, from, notChangedTimestamp, true)));
 		cq.select(from.get(Case.UUID)).distinct(true);
 		List<String> caseUuids = em.createQuery(cq).getResultList();
 
 		if (!caseUuids.isEmpty()) {
-			archiveCoreEntities(caseUuids, null);
+			archive(caseUuids);
 		}
 
 		logger.debug(
