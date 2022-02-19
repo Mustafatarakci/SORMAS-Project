@@ -248,7 +248,7 @@ Feature: Create events
     Then I am checking event group name and id is correctly displayed
     And I click on the Events button from navbar
     And I click on radio button Groups in Event directory
-    Then I search last created groups Event by "GROUP_ID" option filter from API in Event Group Directory
+    Then I search last created groups Event by "GROUP_ID" option filter in Event Group Directory
     Then I search last created Event by "TITLE" option filter from API in Event Group Directory
     And I chose Region option in Event Group Directory from API
     And I chose District option in Event Group Directory from API

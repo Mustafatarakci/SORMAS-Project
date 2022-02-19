@@ -309,7 +309,7 @@ public class EditEventSteps implements En {
         });
 
     When(
-        "I search last created groups Event by {string} option filter from API in Event Group Directory",
+        "I search last created groups Event by {string} option filter in Event Group Directory",
         (String searchCriteria) -> {
           String searchText = "";
           switch (searchCriteria) {
