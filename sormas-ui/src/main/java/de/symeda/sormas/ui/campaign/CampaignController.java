@@ -89,9 +89,7 @@ public class CampaignController {
 	private void createArchiveButton(CommitDiscardWrapperComponent<CampaignEditForm> campaignComponent, CampaignDto campaign) {
 		boolean archived = FacadeProvider.getCampaignFacade().isArchived(campaign.getUuid());
 		Button archiveCampaignButton = ButtonHelper.createButton(archived ? Captions.actionDearchive : Captions.actionArchive, e -> {
-			if (campaignComponent.isModified()) {
-				campaignComponent.commit();
-			}
+			campaignComponent.commit();
 
 			if (archived) {
 				ControllerProvider.getArchiveController()
