@@ -233,9 +233,7 @@ public class EventParticipantsController {
 		if (UserProvider.getCurrent().hasUserRight(UserRight.EVENTPARTICIPANT_ARCHIVE)) {
 			boolean archived = FacadeProvider.getEventParticipantFacade().isArchived(eventParticipant.getUuid());
 			Button archiveButton = ButtonHelper.createButton(archived ? Captions.actionDearchive : Captions.actionArchive, e -> {
-				if (editComponent.isModified()) {
-					editComponent.commit();
-				}
+				editComponent.commit();
 
 				if (archived) {
 					ControllerProvider.getArchiveController()
