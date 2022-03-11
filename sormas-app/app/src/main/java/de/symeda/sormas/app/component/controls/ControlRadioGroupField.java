@@ -65,6 +65,7 @@ public class ControlRadioGroupField extends ControlPropertyEditField<Object> {
 	private List<Object> radioGroupElements = new ArrayList<>();
 	private boolean enumClassSet = false;
 	private AttributeSet attrs;
+	private int checkedButtonIndex = -1;
 
 	// Constructors
 
@@ -109,6 +110,7 @@ public class ControlRadioGroupField extends ControlPropertyEditField<Object> {
 	public void clear() {
 		input.removeAllViews();
 		radioGroupElements.clear();
+		checkedButtonIndex = -1;
 	}
 
 	private RadioButton createRadioButton(int index) {
@@ -207,19 +209,6 @@ public class ControlRadioGroupField extends ControlPropertyEditField<Object> {
 		input.setBackgroundTintList(new ColorStateList(states, thumbColors));
 	}
 
-	private int getCheckedRadioButtonIndex() {
-		for (int i = 0; i < input.getChildCount(); i++) {
-			LinearLayout frame = (LinearLayout) input.getChildAt(i);
-			RadioButton button = (RadioButton) frame.getChildAt(0);
-
-			if (button.isChecked()) {
-				return i;
-			}
-		}
-
-		return -1;
-	}
-
 	private void setChildViewsEnabledState() {
 		for (int i = 0; i < input.getChildCount(); i++) {
 			LinearLayout frame = (LinearLayout) input.getChildAt(i);
@@ -237,8 +226,6 @@ public class ControlRadioGroupField extends ControlPropertyEditField<Object> {
 
 	@Override
 	protected Object getFieldValue() {
-		int checkedButtonIndex = getCheckedRadioButtonIndex();
-
 		if (checkedButtonIndex >= 0) {
 			return radioGroupElements.get(checkedButtonIndex);
 		} else {
@@ -251,7 +238,7 @@ public class ControlRadioGroupField extends ControlPropertyEditField<Object> {
 		if (value == null) {
 			input.clearCheck();
 		} else {
-			int checkedButtonIndex = radioGroupElements.indexOf(value);
+			checkedButtonIndex = radioGroupElements.indexOf(value);
 			if (input.getChildAt(checkedButtonIndex) != null) {
 				LinearLayout frame = (LinearLayout) input.getChildAt(checkedButtonIndex);
 				RadioButton button = (RadioButton) frame.getChildAt(0);

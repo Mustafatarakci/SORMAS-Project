@@ -203,10 +203,15 @@ public class ContactEditFragment extends BaseEditFragment<FragmentContactEditLay
 			record.getCommunity());
 		contentBinding.contactDisease.initializeSpinner(diseaseList);
 		contentBinding.contactDisease.addValueChangedListener(e -> {
+			ContactProximity curProximity = (ContactProximity) contentBinding.contactContactProximity.getValue();
 			contentBinding.contactContactProximity.setVisibility(e.getValue() == null ? GONE : VISIBLE);
 			contentBinding.contactContactProximity.clear();
-			contentBinding.contactContactProximity
-				.setItems(DataUtils.toItems(Arrays.asList(ContactProximity.getValues((Disease) e.getValue(), ConfigProvider.getServerLocale()))));
+			List<ContactProximity> diseaseProximities =
+				Arrays.asList(ContactProximity.getValues((Disease) e.getValue(), ConfigProvider.getServerLocale()));
+			contentBinding.contactContactProximity.setItems(DataUtils.toItems(diseaseProximities));
+			if (diseaseProximities.contains(curProximity)) {
+				contentBinding.contactContactProximity.setValue(curProximity);
+			}
 		});
 
 		contentBinding.contactFirstContactDate.addValueChangedListener(e -> contentBinding.contactLastContactDate.setRequired(e.getValue() != null));
