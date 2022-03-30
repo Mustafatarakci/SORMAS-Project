@@ -24,6 +24,7 @@ import static org.sormas.e2etests.pages.application.cases.CaseImportExportPage.C
 import static org.sormas.e2etests.pages.application.cases.CaseImportExportPage.CUSTOM_CASE_DELETE_BUTTON;
 import static org.sormas.e2etests.pages.application.cases.CaseImportExportPage.CUSTOM_CASE_EXPORT_BUTTON;
 import static org.sormas.e2etests.pages.application.cases.CaseImportExportPage.CUSTOM_CASE_EXPORT_DOWNLOAD_BUTTON;
+import static org.sormas.e2etests.pages.application.cases.CaseImportExportPage.DETAILED_CASE_EXPORT_BUTTON;
 import static org.sormas.e2etests.pages.application.cases.CaseImportExportPage.EXPORT_CONFIGURATION_DATA_DISEASE_CHECKBOX;
 import static org.sormas.e2etests.pages.application.cases.CaseImportExportPage.EXPORT_CONFIGURATION_DATA_FIRST_NAME_CHECKBOX;
 import static org.sormas.e2etests.pages.application.cases.CaseImportExportPage.EXPORT_CONFIGURATION_DATA_LAST_NAME_CHECKBOX;
@@ -49,6 +50,7 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import org.sormas.e2etests.entities.pojo.csv.CustomCaseExportCSV;
+import org.sormas.e2etests.entities.pojo.csv.DetailedCaseExportCSV;
 import org.sormas.e2etests.entities.pojo.web.Case;
 import org.sormas.e2etests.enums.CaseClassification;
 import org.sormas.e2etests.enums.DiseasesValues;
@@ -61,6 +63,8 @@ public class CaseImportExportSteps implements En {
 
   private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
   String configurationName;
+  public static String[] APIHeader;
+  public static String[] UIHeader;
 
   @Inject
   public CaseImportExportSteps(
@@ -82,6 +86,13 @@ public class CaseImportExportSteps implements En {
         () -> {
           webDriverHelpers.clickOnWebElementBySelector(BASIC_CASE_EXPORT_BUTTON);
           TimeUnit.SECONDS.sleep(5); // wait for download
+        });
+
+    When(
+        "I click on the Detailed Case Export button",
+        () -> {
+          webDriverHelpers.clickOnWebElementBySelector(DETAILED_CASE_EXPORT_BUTTON);
+          TimeUnit.SECONDS.sleep(8); // wait for download
         });
 
     When(
@@ -173,6 +184,28 @@ public class CaseImportExportSteps implements En {
     When(
         "I delete created custom case export file",
         () -> webDriverHelpers.clickOnWebElementBySelector(CUSTOM_CASE_DELETE_BUTTON));
+
+    When(
+        "I read exported detailed csv from Case tab",
+        () -> {
+          String file =
+              "./downloads/sormas_f\u00E4lle_" + LocalDate.now().format(formatter) + "_.csv";
+          /*
+                 FacilityCSV reader =
+              parseCSVintoPOJOFacilityTab(
+                  "./downloads/sormas_einrichtungen_"
+                      + LocalDate.now().format(formatter)
+                      + "_.csv");
+          writeCSVFromPOJOFacilityTab(reader);
+                 */
+
+          DetailedCaseExportCSV reader = parseCSVintoPOJODetailedCaseExport(file);
+          //  Path path = Paths.get(file);
+          //  Files.delete(path);
+          System.out.print("------------");
+          System.out.print(reader);
+          System.out.print("------------");
+        });
   }
 
   public CustomCaseExportCSV parseCustomCaseExport(String fileName) {
@@ -243,6 +276,50 @@ public class CaseImportExportSteps implements En {
               .build();
     } catch (NullPointerException e) {
       log.error("Null pointer exception parseCustomCaseExport: {}", e.getCause());
+    }
+    return builder;
+  }
+
+  public DetailedCaseExportCSV parseCSVintoPOJODetailedCaseExport(String fileName) {
+    List<String[]> r = null;
+    String[] values = new String[] {};
+    DetailedCaseExportCSV builder = null;
+    try {
+      CSVReader headerReader = new CSVReader(new FileReader(fileName));
+      String[] nextLine;
+      nextLine = headerReader.readNext();
+      APIHeader = nextLine;
+      nextLine = headerReader.readNext();
+      UIHeader = nextLine;
+    } catch (IOException e) {
+      log.error("IOException csvReader: ", e);
+    } catch (CsvException e) {
+      log.error("CsvException header reader: ", e);
+    }
+    CSVParser csvParser = new CSVParserBuilder().withSeparator(';').build(); // custom separator
+    try (CSVReader reader =
+        new CSVReaderBuilder(new FileReader(fileName))
+            .withCSVParser(csvParser) // custom CSV parser
+            .withSkipLines(2) // skip the first two lines, headers info
+            .build()) {
+      r = reader.readAll();
+    } catch (IOException e) {
+      log.error("IOException csvReader: ", e);
+    } catch (CsvException e) {
+      log.error("CsvException csvReader: ", e);
+    }
+    for (int i = 0; i < r.size(); i++) {
+      values = r.get(i);
+    }
+    try {
+      builder =
+          DetailedCaseExportCSV.builder()
+              .uuid(values[2])
+              .disease(values[7])
+              .diseaseName(values[8])
+              .build();
+    } catch (NullPointerException e) {
+      log.error("Null pointer exception csvReader: ", e);
     }
     return builder;
   }
