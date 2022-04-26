@@ -352,10 +352,10 @@ Feature: Case filter functionality
     And I click APPLY BUTTON in Case Directory Page
     And I check that number of displayed cases results is 1
     And I click "Nur Fälle ohne Geo-Koordinaten" checkbox on Case directory page
-    And I click "Nur Fälle ohne verantwortlichen Beauftragten" checkbox on Case directory page
+    And I click "Nur Fälle ohne verantwortlichen Benutzer" checkbox on Case directory page
     And I click APPLY BUTTON in Case Directory Page
-    And I check that number of displayed cases results is 0
-    And I click "Nur Fälle ohne verantwortlichen Beauftragten" checkbox on Case directory page
+    And I check that number of displayed cases results is 1
+    And I click "Nur Fälle ohne verantwortlichen Benutzer" checkbox on Case directory page
     And I click "Nur Fälle mit verlängerter Isolation" checkbox on Case directory page
     And I click APPLY BUTTON in Case Directory Page
     And I check that number of displayed cases results is 0
