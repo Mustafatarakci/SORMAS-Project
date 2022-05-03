@@ -14,6 +14,7 @@
  */
 package de.symeda.sormas.backend.person;
 
+import static de.symeda.sormas.backend.common.CriteriaBuilderHelper.and;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.maxBy;
@@ -24,11 +25,13 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -41,6 +44,8 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
@@ -120,8 +125,10 @@ import de.symeda.sormas.api.utils.ValidationRuntimeException;
 import de.symeda.sormas.backend.caze.Case;
 import de.symeda.sormas.backend.caze.CaseFacadeEjb;
 import de.symeda.sormas.backend.caze.CaseFacadeEjb.CaseFacadeEjbLocal;
+import de.symeda.sormas.backend.caze.CaseQueryContext;
 import de.symeda.sormas.backend.caze.CaseService;
 import de.symeda.sormas.backend.common.AbstractDomainObject;
+import de.symeda.sormas.backend.common.ConfigFacadeEjb.ConfigFacadeEjbLocal;
 import de.symeda.sormas.backend.common.CriteriaBuilderHelper;
 import de.symeda.sormas.backend.contact.Contact;
 import de.symeda.sormas.backend.contact.ContactFacadeEjb;
@@ -207,6 +214,8 @@ public class PersonFacadeEjb implements PersonFacade {
 	@EJB
 	private CountryService countryService;
 	@EJB
+	private ConfigFacadeEjbLocal configFacade;
+	@EJB
 	private FeatureConfigurationFacadeEjbLocal featureConfigurationFacade;
 	@EJB
 	private UserFacadeEjbLocal userFacade;
@@ -250,6 +259,77 @@ public class PersonFacadeEjb implements PersonFacade {
 		}
 
 		return personService.getSimilarPersonDtos(criteria, 1).size() > 0;
+	}
+
+	private void setSimilarityThresholdQuery() {
+		double nameSimilarityThreshold = configFacade.getNameSimilarityThreshold();
+		Query q = em.createNativeQuery("select set_limit(" + nameSimilarityThreshold + ")");
+		q.getSingleResult();
+	}
+
+	List<PersonIndexDto> getSimilarPersons(PersonSimilarityCriteria criteria, Integer limit) {
+
+		setSimilarityThresholdQuery();
+		Set<PersonIndexDto> resultSet = new LinkedHashSet<>();
+
+		// 1. Persons of cases
+		List<PersonIndexDto> casePersons = getSimilarPersons(criteria, limit, this::buildSimilarCasePersonPredicate);
+		resultSet.addAll(casePersons);
+
+		// TODO #9053: fetch persons by other references
+
+		return new ArrayList<>(resultSet);
+	}
+
+	/**
+	 * @param reference
+	 *            Returns a {@code Predicate} that filters by referenced core entity with userFilter, statusFilter and inJurisdictionOrOwned
+	 *            as filter (WHERE condition).
+	 */
+	private List<PersonIndexDto> getSimilarPersons(
+		PersonSimilarityCriteria criteria,
+		Integer limit,
+		Function<PersonQueryContext, Predicate> reference) {
+
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+
+		CriteriaQuery<PersonIndexDto> cq = cb.createQuery(PersonIndexDto.class);
+		Root<Person> personRoot = cq.from(Person.class);
+		PersonQueryContext personQueryContext = new PersonQueryContext(cb, cq, personRoot);
+
+		// jurisdiction check in WHERE condition -> always true
+		selectToPersonIndexDto(personQueryContext, cb.conjunction());
+
+		cq.where(and(cb, personService.buildSimilarityCriteriaFilter(criteria, cb, personRoot), reference.apply(personQueryContext)));
+		cq.distinct(true);
+
+		TypedQuery<PersonIndexDto> query = em.createQuery(cq);
+		if (limit != null) {
+			query.setMaxResults(limit);
+		}
+
+		List<PersonIndexDto> casePersons = query.getResultList();
+		return casePersons;
+	}
+
+	private Predicate buildSimilarCasePersonPredicate(PersonQueryContext personQueryContext) {
+
+		boolean activeEntriesOnly = configFacade.isDuplicateChecksExcludePersonsOfArchivedEntries();
+
+		CriteriaBuilder cb = personQueryContext.getCriteriaBuilder();
+		@SuppressWarnings("rawtypes")
+		CriteriaQuery cq = personQueryContext.getQuery();
+
+		Join<Person, Case> personCaseJoin = personQueryContext.getRoot().join(Person.CASES, JoinType.INNER);
+		CaseQueryContext caseQueryContext = new CaseQueryContext(cb, cq, personCaseJoin);
+		Predicate personCasePredicate = and(
+			cb,
+			activeEntriesOnly ? caseService.createActiveCasesFilter(cb, personCaseJoin) : caseService.createDefaultFilter(cb, personCaseJoin),
+			// TODO #9053: Change to createUserFilter(caseQueryContext) (comes with #8747)
+			caseService.createUserFilter(cb, cq, personCaseJoin),
+			caseService.inJurisdictionOrOwned(caseQueryContext));
+
+		return personCasePredicate;
 	}
 
 	@Override
