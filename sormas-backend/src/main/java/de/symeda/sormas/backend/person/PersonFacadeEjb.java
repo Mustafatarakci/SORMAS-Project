@@ -18,8 +18,6 @@ import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.maxBy;
 
-import de.symeda.sormas.backend.event.EventFacadeEjb;
-import de.symeda.sormas.backend.event.EventParticipantFacadeEjb;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -46,6 +44,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.From;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Order;
@@ -128,8 +127,10 @@ import de.symeda.sormas.backend.contact.Contact;
 import de.symeda.sormas.backend.contact.ContactFacadeEjb;
 import de.symeda.sormas.backend.contact.ContactFacadeEjb.ContactFacadeEjbLocal;
 import de.symeda.sormas.backend.contact.ContactService;
+import de.symeda.sormas.backend.event.EventFacadeEjb;
 import de.symeda.sormas.backend.event.EventFacadeEjb.EventFacadeEjbLocal;
 import de.symeda.sormas.backend.event.EventParticipant;
+import de.symeda.sormas.backend.event.EventParticipantFacadeEjb;
 import de.symeda.sormas.backend.event.EventParticipantFacadeEjb.EventParticipantFacadeEjbLocal;
 import de.symeda.sormas.backend.event.EventParticipantService;
 import de.symeda.sormas.backend.externaljournal.ExternalJournalService;
@@ -1283,9 +1284,6 @@ public class PersonFacadeEjb implements PersonFacade {
 	}
 
 	@Override
-	@SuppressWarnings({
-		"rawtypes",
-		"unchecked" })
 	public List<PersonIndexDto> getIndexList(PersonCriteria criteria, Integer first, Integer max, List<SortProperty> sortProperties) {
 
 		long startTime = DateHelper.startTime();
@@ -1297,8 +1295,80 @@ public class PersonFacadeEjb implements PersonFacade {
 		final PersonJoins personJoins = (PersonJoins) personQueryContext.getJoins();
 		personJoins.configure(criteria);
 
+		selectToPersonIndexDto(personQueryContext, personService.inJurisdictionOrOwned(personQueryContext));
+
+		Predicate filter = createIndexListFilter(criteria, personQueryContext);
+		if (filter != null) {
+			cq.where(filter);
+		}
+		cq.distinct(true);
+
+		if (sortProperties != null && sortProperties.size() > 0) {
+			List<Order> order = new ArrayList<Order>(sortProperties.size());
+			for (SortProperty sortProperty : sortProperties) {
+				Expression<?> expression;
+				switch (sortProperty.propertyName) {
+				case PersonIndexDto.UUID:
+				case PersonIndexDto.FIRST_NAME:
+				case PersonIndexDto.LAST_NAME:
+				case PersonIndexDto.SEX:
+					expression = person.get(sortProperty.propertyName);
+					break;
+				case PersonIndexDto.PHONE:
+					// order in the multiselect - Postgres limitation - needed to make sure it uses the same expression for ordering
+					expression = cb.literal(15);
+					break;
+				case PersonIndexDto.EMAIL_ADDRESS:
+					// order in the multiselect - Postgres limitation - needed to make sure it uses the same expression for ordering
+					expression = cb.literal(16);
+					break;
+				case PersonIndexDto.AGE_AND_BIRTH_DATE:
+					expression = person.get(Person.APPROXIMATE_AGE);
+					break;
+				case PersonIndexDto.DISTRICT:
+					expression = personJoins.getAddressJoins().getDistrict().get(District.NAME);
+					break;
+				case PersonIndexDto.STREET:
+				case PersonIndexDto.HOUSE_NUMBER:
+				case PersonIndexDto.POSTAL_CODE:
+				case PersonIndexDto.CITY:
+					expression = personJoins.getAddress().get(sortProperty.propertyName);
+					break;
+				default:
+					throw new IllegalArgumentException(sortProperty.propertyName);
+				}
+				order.add(sortProperty.ascending ? cb.asc(expression) : cb.desc(expression));
+			}
+			cq.orderBy(order);
+		} else {
+			cq.orderBy(cb.desc(person.get(Person.CHANGE_DATE)));
+		}
+
+		List<PersonIndexDto> persons = QueryHelper.getResultList(em, cq, first, max);
+
+		Pseudonymizer pseudonymizer = Pseudonymizer.getDefault(userService::hasRight, I18nProperties.getCaption(Captions.inaccessibleValue));
+		pseudonymizer.pseudonymizeDtoCollection(
+			PersonIndexDto.class,
+			persons,
+			p -> p.getInJurisdiction(),
+			(p, isInJurisdiction) -> pseudonymizer.pseudonymizeDto(AgeAndBirthDateDto.class, p.getAgeAndBirthDate(), isInJurisdiction, null));
+
+		logger.debug(
+			"getIndexList() finished. association={}, count={}, {}ms",
+			Optional.ofNullable(criteria).orElse(new PersonCriteria()).getPersonAssociation().name(),
+			persons.size(),
+			DateHelper.durationMillies(startTime));
+		return persons;
+	}
+
+	private void selectToPersonIndexDto(PersonQueryContext personQueryContext, Predicate inJurisdictionOrOwned) {
+
+		final CriteriaBuilder cb = personQueryContext.getCriteriaBuilder();
+		final CriteriaQuery<?> cq = personQueryContext.getQuery();
+		final PersonJoins personJoins = personQueryContext.getJoins();
+
+		final From<?, Person> person = personJoins.getRoot();
 		final Join<Person, Location> location = personJoins.getAddress();
-		final Join<Location, District> district = personJoins.getAddressJoins().getDistrict();
 
 		final Subquery<String> phoneSubQuery = cq.subquery(String.class);
 		final Root<PersonContactDetail> phoneRoot = phoneSubQuery.from(PersonContactDetail.class);
@@ -1329,7 +1399,7 @@ public class PersonFacadeEjb implements PersonFacade {
 			person.get(Person.BIRTHDATE_MM),
 			person.get(Person.BIRTHDATE_YYYY),
 			person.get(Person.SEX),
-			district.get(District.NAME),
+			personJoins.getAddressJoins().getDistrict().get(District.NAME),
 			location.get(Location.STREET),
 			location.get(Location.HOUSE_NUMBER),
 			location.get(Location.POSTAL_CODE),
@@ -1337,68 +1407,7 @@ public class PersonFacadeEjb implements PersonFacade {
 			phoneSubQuery.alias(PersonIndexDto.PHONE),
 			emailSubQuery.alias(PersonIndexDto.EMAIL_ADDRESS),
 			person.get(Person.CHANGE_DATE),
-			JurisdictionHelper.booleanSelector(cb, personService.inJurisdictionOrOwned(personQueryContext)));
-
-		Predicate filter = createIndexListFilter(criteria, personQueryContext);
-		if (filter != null) {
-			cq.where(filter);
-		}
-		cq.distinct(true);
-
-		if (sortProperties != null && sortProperties.size() > 0) {
-			List<Order> order = new ArrayList<Order>(sortProperties.size());
-			for (SortProperty sortProperty : sortProperties) {
-				Expression<?> expression;
-				switch (sortProperty.propertyName) {
-				case PersonIndexDto.UUID:
-				case PersonIndexDto.FIRST_NAME:
-				case PersonIndexDto.LAST_NAME:
-				case PersonIndexDto.SEX:
-					expression = person.get(sortProperty.propertyName);
-					break;
-				case PersonIndexDto.PHONE:
-					expression = cb.literal(15); // order in the multiselect - Postgres limitation - needed to make sure it uses the same expression for ordering
-					break;
-				case PersonIndexDto.EMAIL_ADDRESS:
-					expression = cb.literal(16); // order in the multiselect - Postgres limitation - needed to make sure it uses the same expression for ordering
-					break;
-				case PersonIndexDto.AGE_AND_BIRTH_DATE:
-					expression = person.get(Person.APPROXIMATE_AGE);
-					break;
-				case PersonIndexDto.DISTRICT:
-					expression = district.get(District.NAME);
-					break;
-				case PersonIndexDto.STREET:
-				case PersonIndexDto.HOUSE_NUMBER:
-				case PersonIndexDto.POSTAL_CODE:
-				case PersonIndexDto.CITY:
-					expression = location.get(sortProperty.propertyName);
-					break;
-				default:
-					throw new IllegalArgumentException(sortProperty.propertyName);
-				}
-				order.add(sortProperty.ascending ? cb.asc(expression) : cb.desc(expression));
-			}
-			cq.orderBy(order);
-		} else {
-			cq.orderBy(cb.desc(person.get(Person.CHANGE_DATE)));
-		}
-
-		List<PersonIndexDto> persons = QueryHelper.getResultList(em, cq, first, max);
-
-		Pseudonymizer pseudonymizer = Pseudonymizer.getDefault(userService::hasRight, I18nProperties.getCaption(Captions.inaccessibleValue));
-		pseudonymizer.pseudonymizeDtoCollection(
-			PersonIndexDto.class,
-			persons,
-			p -> p.getInJurisdiction(),
-			(p, isInJurisdiction) -> pseudonymizer.pseudonymizeDto(AgeAndBirthDateDto.class, p.getAgeAndBirthDate(), isInJurisdiction, null));
-
-		logger.debug(
-			"getIndexList() finished. association={}, count={}, {}ms",
-			Optional.ofNullable(criteria).orElse(new PersonCriteria()).getPersonAssociation().name(),
-			persons.size(),
-			DateHelper.durationMillies(startTime));
-		return persons;
+			JurisdictionHelper.booleanSelector(cb, inJurisdictionOrOwned));
 	}
 
 	@Override
