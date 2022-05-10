@@ -16,6 +16,7 @@
 package de.symeda.sormas.backend.event;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
@@ -52,6 +53,7 @@ import de.symeda.sormas.api.event.EventParticipantDto;
 import de.symeda.sormas.api.event.EventStatus;
 import de.symeda.sormas.api.event.TypeOfPlace;
 import de.symeda.sormas.api.externalsurveillancetool.ExternalSurveillanceToolException;
+import de.symeda.sormas.api.infrastructure.facility.FacilityReferenceDto;
 import de.symeda.sormas.api.location.LocationDto;
 import de.symeda.sormas.api.person.PersonDto;
 import de.symeda.sormas.api.share.ExternalShareStatus;
@@ -195,6 +197,50 @@ public class EventFacadeEjbTest extends AbstractBeanTest {
 		results = getEventFacade().getIndexList(eventCriteria, 0, 100, null);
 		assertEquals(1, results.size());
 		assertEquals("TitleEv2", results.get(0).getEventTitle());
+	}
+
+	@Test
+	public void testGetIndexListWithLabUser() {
+
+		RDCF rdcf = creator.createRDCF("Region", "District", "Community", "Facility");
+		UserReferenceDto survSupUser = creator
+			.createUser(rdcf.region.getUuid(), rdcf.district.getUuid(), rdcf.facility.getUuid(), "Surv", "Sup", UserRole.SURVEILLANCE_SUPERVISOR).toReference();
+		UserDto labUser = creator.createUser(null, null, null, "Lab", "Off", UserRole.LAB_USER);
+		FacilityReferenceDto laboratory = new FacilityReferenceDto(rdcf.facility.getUuid(), rdcf.facility.toString(), null);
+		labUser.setLaboratory(laboratory);
+		getUserFacade().saveUser(labUser);
+		loginWith(labUser);
+
+		EventCriteria eventCriteria = new EventCriteria();
+		List<EventIndexDto> result;
+
+		// 0. No data
+		result = getEventFacade().getIndexList(eventCriteria, 0, 100, null);
+		assertThat(result, is(empty()));
+
+		EventDto event1 = creator.createEvent(
+			EventStatus.SIGNAL,
+			EventInvestigationStatus.PENDING,
+			"TitleEv1",
+			"DescriptionEv1",
+			"First",
+			"Name",
+			"12345",
+			TypeOfPlace.PUBLIC_PLACE,
+			DateHelper.subtractDays(new Date(), 1),
+			new Date(),
+			survSupUser,
+			survSupUser,
+			Disease.EVD,
+			rdcf.district);
+		EventParticipantDto ep11 = creator.createEventParticipant(event1.toReference(), creator.createPerson(), survSupUser);
+		creator.createSample(ep11.toReference(), survSupUser, laboratory);
+		EventParticipantDto ep12 = creator.createEventParticipant(event1.toReference(), creator.createPerson(), survSupUser);
+		creator.createSample(ep12.toReference(), survSupUser, laboratory);
+
+		// 1a. Make sure multiple EventParticipants don't duplicate the event
+		result = getEventFacade().getIndexList(eventCriteria, 0, 100, null);
+		assertThat(result, hasSize(1));
 	}
 
 	@Test
