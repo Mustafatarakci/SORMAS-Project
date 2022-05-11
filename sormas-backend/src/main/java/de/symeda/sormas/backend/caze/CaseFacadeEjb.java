@@ -2264,6 +2264,7 @@ public class CaseFacadeEjb extends AbstractCoreFacadeEjb<Case, CaseDataDto, Case
 
 	@Override
 	@RolesAllowed(UserRight._SYSTEM)
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public int updateCompleteness() {
 		List<String> getCompletenessCheckCaseList = getCompletenessCheckNeededCaseList();
 

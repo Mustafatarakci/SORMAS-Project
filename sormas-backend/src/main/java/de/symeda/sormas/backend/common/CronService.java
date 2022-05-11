@@ -24,6 +24,7 @@ import javax.annotation.security.RunAs;
 import javax.ejb.EJB;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
+import javax.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +35,7 @@ import de.symeda.sormas.api.feature.FeatureTypeProperty;
 import de.symeda.sormas.api.importexport.ImportExportUtils;
 import de.symeda.sormas.api.task.TaskType;
 import de.symeda.sormas.api.user.UserRight;
-import de.symeda.sormas.api.utils.DateHelper;
+import de.symeda.sormas.backend.caze.CalculateCaseCompletionJob;
 import de.symeda.sormas.backend.caze.CaseFacadeEjb.CaseFacadeEjbLocal;
 import de.symeda.sormas.backend.common.ConfigFacadeEjb.ConfigFacadeEjbLocal;
 import de.symeda.sormas.backend.contact.ContactFacadeEjb.ContactFacadeEjbLocal;
@@ -95,11 +96,12 @@ public class CronService {
 		taskFacade.sendNewAndDueTaskMessages();
 	}
 
+	@Inject
+	private CalculateCaseCompletionJob calculateCaseCompletionJob;
+
 	@Schedule(hour = "*", minute = "*/2", second = "0", persistent = false)
 	public void calculateCaseCompletion() {
-		long timeStart = DateHelper.startTime();
-		int casesUpdated = caseFacade.updateCompleteness();
-		logger.debug("calculateCaseCompletion finished. {} cases, {} s", casesUpdated, DateHelper.durationSeconds(timeStart));
+		calculateCaseCompletionJob.run();
 	}
 
 	@Schedule(hour = "1", minute = "0", second = "0", persistent = false)
