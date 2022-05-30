@@ -17,10 +17,6 @@ public class ErrorDetails {
 
   private String entity;
 
-  private int messageId;
-
-  private List<String> argumentsList;
-
   public String getMessage() {
     return message;
   }
@@ -29,23 +25,13 @@ public class ErrorDetails {
     return entity;
   }
 
-  public int getMessageId() {
-    return messageId;
-  }
-
-  public List<String> getArgumentsList() {
-    return argumentsList;
-  }
-
   public String getDateFormatted() {
     return dateFormatted;
   }
 
-  public ErrorDetails( String message, String entity, int messageId, List<String> argumentsList) {
+  public ErrorDetails( String message, String entity) {
     this.message = message;
     this.entity = entity;
-    this.messageId = messageId;
-    this.argumentsList = argumentsList;
   }
 
   public String toString() {

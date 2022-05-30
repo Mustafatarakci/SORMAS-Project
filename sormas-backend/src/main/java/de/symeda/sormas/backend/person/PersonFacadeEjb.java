@@ -14,8 +14,6 @@
  */
 package de.symeda.sormas.backend.person;
 
-import static de.symeda.sormas.api.error.templates.ExceptionsTemplate.RECORD_NOT_FOUND_MSG;
-import static de.symeda.sormas.api.error.templates.ExceptionsTemplate.errorMap;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.maxBy;
@@ -80,6 +78,7 @@ import de.symeda.sormas.api.contact.FollowUpStatus;
 import de.symeda.sormas.api.contact.FollowUpStatusDto;
 import de.symeda.sormas.api.error.CustomizedExceptionHandler;
 import de.symeda.sormas.api.error.implementations.CustomizedException;
+import de.symeda.sormas.api.error.templates.ExceptionGroup;
 import de.symeda.sormas.api.event.EventParticipantCriteria;
 import de.symeda.sormas.api.externaldata.ExternalDataDto;
 import de.symeda.sormas.api.externaldata.ExternalDataUpdateException;
@@ -323,9 +322,8 @@ public class PersonFacadeEjb extends CustomizedExceptionHandler implements Perso
 		return Optional.of(uuid)
 			.map(u -> personService.getByUuid(u))
 			.map(p -> convertToDto(p, pseudonymizer, personService.inJurisdictionOrOwned(p)))
-			.orElseThrow( () -> new CustomizedException(Response.Status.NOT_FOUND, RECORD_NOT_FOUND_MSG,
-					PersonFacadeEjb.class,errorMap.get(RECORD_NOT_FOUND_MSG ).getId(),
-							errorMap.get(RECORD_NOT_FOUND_MSG ).getArgumentsList()));
+			.orElseThrow( () -> new CustomizedException(Response.Status.NOT_FOUND, ExceptionGroup.RECORD_NOT_FOUND_MSG.toString(),
+					PersonFacadeEjb.class));
 	}
 
 	@Override

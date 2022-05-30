@@ -1200,6 +1200,7 @@ public interface Captions {
 	String eventSuperordinateEvent = "eventSuperordinateEvent";
 	String eventUnlinkEvent = "eventUnlinkEvent";
 	String eventUnlinkEventGroup = "eventUnlinkEventGroup";
+	String Exception_recordNotFoundMsg = "Exception.recordNotFoundMsg";
 	String export = "export";
 	String exportBasic = "exportBasic";
 	String exportCaseCustom = "exportCaseCustom";

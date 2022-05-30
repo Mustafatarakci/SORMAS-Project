@@ -13,8 +13,6 @@ public abstract class CustomizedExceptionHandler
     public Response toResponse(CustomizedException exception) {
 
         ErrorDetails errorDetails = new ErrorDetailsBuilder()
-                        .setMessageId(exception.getMessageId())
-                        .setArgumentsList( exception.getArgumentsList() )
                         .setMessage( exception.getMessage() )
                         .setEntity( exception.getEntity() )
                         .build();
