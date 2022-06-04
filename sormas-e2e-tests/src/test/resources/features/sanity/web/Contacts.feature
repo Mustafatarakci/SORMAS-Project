@@ -759,7 +759,7 @@ Feature: Contacts end to end tests
     And I click on SAVE new contact case button
     And I check if National Health Id, Nickname and Passport number appear in Pick or create person popup
 
-  @issue=SORDEV-6146 @env_de @testIt
+  @issue=SORDEV-6146 @env_de
   Scenario: Test Extend the follow-up until date calculation for cases and contacts
     Given I log in with National User
     When I click on the Contacts button from navbar
