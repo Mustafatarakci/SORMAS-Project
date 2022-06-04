@@ -49,6 +49,8 @@ public class FollowUpTabPage {
       By.cssSelector("[id='chillsSweats'] [class='v-checkbox v-select-option']");
   public static final By CHILLS_SWEATS_YES_BUTTON =
       By.xpath("//div[@id='chillsSweats']//label[contains(text(), 'Yes')]");
+  public static final By CHILLS_SWEATS_OPTIONS_DE =
+      By.cssSelector("[id='chillsSweats'] [class='v-checkbox v-select-option']");
   public static final By FEELING_ILL_OPTIONS =
       By.cssSelector("[id='feelingIll'] [class='v-checkbox v-select-option']");
   public static final By FEELING_ILL_YES_BUTTON =

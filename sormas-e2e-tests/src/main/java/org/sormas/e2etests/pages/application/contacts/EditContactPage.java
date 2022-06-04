@@ -92,6 +92,9 @@ public class EditContactPage {
   public static final By OVERWRITE_FOLLOW_UP_LABEL =
       By.cssSelector("#overwriteFollowUpUntil > label");
   public static final By FOLLOW_UP_UNTIL_DATE = By.cssSelector("#followUpUntil input");
+  public static final By EXPECTED_FOLLOW_UP_UNTIL_DATE =
+      By.xpath(
+          "//div[@class='col-xs-4 col-md-4 ' and @location='expectedFollowUpUntilDateLoc']//input");
   public static final By FOLLOW_UP_STATUS_TEXT = By.id("followUpComment");
   public static final By RESPONSIBLE_STATUS_OFFICER_COMBOBOX =
       By.cssSelector(".v-verticallayout [location='contactOfficer'] [role='combobox'] div");

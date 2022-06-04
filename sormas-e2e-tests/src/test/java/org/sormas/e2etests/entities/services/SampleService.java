@@ -182,10 +182,36 @@ public class SampleService {
         .build();
   }
 
+  public Sample buildPathogenTestVerifiedWithoutDateDE(String testType) {
+    long currentTimeMillis = System.currentTimeMillis();
+    return Sample.builder()
+        .reportDate(LocalDate.now())
+        .typeOfTest(testType)
+        .testedDisease("COVID-19")
+        .laboratory("Andere Einrichtung")
+        .laboratoryName("Test name")
+        .sampleTestResults("Positiv")
+        .resultVerifiedByLabSupervisor("JA")
+        .testResultsComment("Comment on Edit Pathogen requests or received " + currentTimeMillis)
+        .build();
+  }
+
   public Sample buildGeneratedPositiveSampleDE() {
     return Sample.builder()
         .purposeOfTheSample("INTERNER /IN-HOUSE TEST")
         .dateOfCollection(LocalDate.now().minusDays(10))
+        .laboratory("Labor")
+        .testedDisease("COVID-19")
+        .sampleTestResults("Positiv")
+        .resultVerifiedByLabSupervisor("JA")
+        .sampleType("Nasen-Abstrich")
+        .build();
+  }
+
+  public Sample buildGeneratedPositiveSampleWithDateParamDE(Integer days) {
+    return Sample.builder()
+        .purposeOfTheSample("Externer Labortest")
+        .dateOfCollection(LocalDate.now().minusDays(days))
         .laboratory("Labor")
         .testedDisease("COVID-19")
         .sampleTestResults("Positiv")

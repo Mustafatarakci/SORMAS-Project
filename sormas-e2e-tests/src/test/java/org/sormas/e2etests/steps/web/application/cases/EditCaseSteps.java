@@ -80,6 +80,7 @@ import static org.sormas.e2etests.pages.application.cases.EditCasePage.DISEASE_V
 import static org.sormas.e2etests.pages.application.cases.EditCasePage.DISTRICT_COMBOBOX;
 import static org.sormas.e2etests.pages.application.cases.EditCasePage.DISTRICT_INPUT;
 import static org.sormas.e2etests.pages.application.cases.EditCasePage.EDIT_SAMPLE_BUTTON;
+import static org.sormas.e2etests.pages.application.cases.EditCasePage.EDIT_SECOND_SAMPLE_BUTTON;
 import static org.sormas.e2etests.pages.application.cases.EditCasePage.EDIT_TASK_BUTTON;
 import static org.sormas.e2etests.pages.application.cases.EditCasePage.EDIT_TRAVEL_ENTRY_FROM_CASE_BUTTON;
 import static org.sormas.e2etests.pages.application.cases.EditCasePage.EPIDEMIOLOGICAL_CONFIRMATION_COMBOBOX;
@@ -181,6 +182,7 @@ import static org.sormas.e2etests.pages.application.contacts.CreateNewContactPag
 import static org.sormas.e2etests.pages.application.contacts.CreateNewContactPage.SOURCE_CASE_CONTACT_WINDOW_FIRST_RESULT_OPTION;
 import static org.sormas.e2etests.pages.application.contacts.CreateNewContactPage.SOURCE_CASE_WINDOW_CONTACT_DE;
 import static org.sormas.e2etests.pages.application.contacts.EditContactPage.END_OF_PROCESSING_DATE_POPUP_INPUT;
+import static org.sormas.e2etests.pages.application.contacts.EditContactPage.EXPECTED_FOLLOW_UP_UNTIL_DATE;
 import static org.sormas.e2etests.pages.application.contacts.EditContactPage.FOLLOW_UP_UNTIL_DATE;
 import static org.sormas.e2etests.pages.application.contacts.EditContactPage.SOURCE_CASE_WINDOW_FIRST_RESULT_OPTION;
 import static org.sormas.e2etests.pages.application.contacts.EditContactPage.SOURCE_CASE_WINDOW_SEARCH_CASE_BUTTON;
@@ -1156,6 +1158,9 @@ public class EditCaseSteps implements En {
     When(
         "I click on edit Sample",
         () -> webDriverHelpers.clickOnWebElementBySelector(EDIT_SAMPLE_BUTTON));
+    When(
+        "I click on edit second Sample",
+        () -> webDriverHelpers.clickOnWebElementBySelector(EDIT_SECOND_SAMPLE_BUTTON));
 
     When(
         "I click on the Create button from Case Document Templates",
@@ -1505,6 +1510,29 @@ public class EditCaseSteps implements En {
         () -> {
           webDriverHelpers.clickOnWebElementBySelector(ACTION_CONFIRM);
           webDriverHelpers.waitForPageLoadingSpinnerToDisappear(40);
+        });
+
+    When(
+        "I check if follow up date is {int} weeks in the future after the report date",
+        (Integer weeks) -> {
+          LocalDate dateFollowUp =
+              LocalDate.parse(
+                  webDriverHelpers.getValueFromWebElement(FOLLOW_UP_UNTIL_DATE), DATE_FORMATTER_DE);
+          softly.assertEquals(
+              dateFollowUp, LocalDate.now().plusWeeks(weeks), "Follow-up dates are not equal");
+          softly.assertAll();
+        });
+
+    When(
+        "I check if expected follow up date is {int} days in the future after the report date",
+        (Integer days) -> {
+          LocalDate dateFollowUp =
+              LocalDate.parse(
+                  webDriverHelpers.getValueFromWebElement(EXPECTED_FOLLOW_UP_UNTIL_DATE),
+                  DATE_FORMATTER_DE);
+          softly.assertEquals(
+              dateFollowUp, LocalDate.now().plusDays(days), "Follow-up dates are not equal");
+          softly.assertAll();
         });
   }
 

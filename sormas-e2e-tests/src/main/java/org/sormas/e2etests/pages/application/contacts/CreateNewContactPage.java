@@ -43,6 +43,8 @@ public class CreateNewContactPage {
       By.cssSelector(".v-window [id='caseIdExternalSystem']");
   public static final By DATE_OF_LAST_CONTACT_INPUT =
       By.cssSelector(".v-window [id='lastContactDate'] input");
+  public static final By DATE_OF_LAST_CONTACT_EDIT_CONTACT_INPUT =
+      By.cssSelector("[id='lastContactDate'] input");
   public static final By CASE_OR_EVENT_INFORMATION_INPUT =
       By.cssSelector(".v-window [id='caseOrEventInformation']");
   public static final By RELATIONSHIP_WITH_CASE_COMBOBOX =

@@ -115,6 +115,15 @@ public class ContactService {
         .build();
   }
 
+  public Contact buildGeneratedContactWithParametrizedReportDataDE(LocalDate dateOfReport) {
+    return Contact.builder()
+        .firstName(faker.name().firstName())
+        .lastName(faker.name().lastName())
+        .sex(GenderValues.getRandomGenderDE())
+        .reportDate(dateOfReport)
+        .build();
+  }
+
   public Contact buildGeneratedContactWithParametrizedPersonData(
       String firstName, String lastName, LocalDate dateOfBirth) {
     return Contact.builder()
@@ -142,6 +151,17 @@ public class ContactService {
         .relationshipWithCase("Work in the same environment")
         .descriptionOfHowContactTookPlace(
             "Automated test dummy description " + System.currentTimeMillis())
+        .build();
+  }
+
+  public Contact buildGeneratedContactWithDateNowDE(LocalDate dateOfReport) {
+    return Contact.builder()
+        .firstName(faker.name().firstName())
+        .lastName(faker.name().lastName())
+        .sex(GenderValues.getRandomGenderDE())
+        .reportDate(dateOfReport)
+        .responsibleRegion(RegionsValues.VoreingestellteBundeslander.getName())
+        .responsibleDistrict(DistrictsValues.VoreingestellterLandkreis.getName())
         .build();
   }
 

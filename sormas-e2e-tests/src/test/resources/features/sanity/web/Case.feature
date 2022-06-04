@@ -1202,3 +1202,46 @@ Feature: Case end to end tests
     And I click on Save button from the new travel entry form
     Then I navigate to the last created via api Person page via URL
     And I check if added travel Entry appeared on Edit Person Page
+
+  @issue=SORDEV-6146 @env_de
+  Scenario: Test Extend the follow-up until date calculation for cases and contacts
+    Given API: I create a new person
+    And API: I check that POST call body is "OK"
+    And API: I check that POST call status code is 200
+    And API: I create a new case
+    And API: I check that POST call body is "OK"
+    And API: I check that POST call status code is 200
+    Then I log in with National User
+    Then I click on the Cases button from navbar
+    When I open the last created Case via API
+    Then I check if follow up date is 2 weeks in the future after the report date
+    And I click on New Sample in German
+    Then I create a new Sample 3 days ago for DE version
+    And I save the created sample
+    Then I click on edit Sample
+    Then I click on the new pathogen test from the Edit Sample page for DE version
+    And I complete all fields from Pathogen test result popup for PCR RT PCR Value Detection test type for DE version without date and save
+    Then I confirm the Create case from contact with positive test result
+    Then I navigate to case tab
+    Then I check if follow up date is 2 weeks in the future after the report date
+    And I check if expected follow up date is 11 days in the future after the report date
+    Then I navigate to symptoms tab
+    Then I set Chills and Sweats Symptoms for DE version to JA
+    And I set Date of symptom onset for 6 days ago
+    When I save the Symptoms data
+    Then I navigate to case tab
+    And I check if expected follow up date is 8 days in the future after the report date
+    And I click on New Sample in German
+    Then I create a new Sample 7 days ago for DE version
+    And I save the created sample
+    Then I click on edit second Sample
+    Then I click on the new pathogen test from the Edit Sample page for DE version
+    And I complete all fields from Pathogen test result popup for PCR RT PCR Value Detection test type for DE version without date and save
+    Then I confirm the Create case from contact with positive test result
+    Then I navigate to case tab
+    And I check if expected follow up date is 8 days in the future after the report date
+    Then I navigate to Contacts tab in Edit case page
+    And I click on new contact button from Case Contacts tab
+    Then I fill a mandatory information and a date of last contact 10 days before the report date
+    When I click on SAVE new contact button
+    And I check if expected follow up date is 4 days in the future after the report date

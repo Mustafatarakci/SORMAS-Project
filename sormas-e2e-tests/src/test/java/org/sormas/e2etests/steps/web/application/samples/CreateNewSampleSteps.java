@@ -131,6 +131,15 @@ public class CreateNewSampleSteps implements En {
         });
 
     When(
+        "I create a new Sample {int} days ago for DE version",
+        (Integer days) -> {
+          sample = sampleService.buildGeneratedPositiveSampleWithDateParamDE(days);
+          fillDateOfCollectionDE(sample.getDateOfCollection());
+          selectSampleType(sample.getSampleType());
+          selectLaboratory(sample.getLaboratory());
+        });
+
+    When(
         "I check if value {string} is unavailable in Type of Sample combobox on Create new Sample page",
         (String sampleMaterial) -> {
           softly.assertFalse(
@@ -206,6 +215,8 @@ public class CreateNewSampleSteps implements En {
         "^I save the created sample",
         () -> {
           webDriverHelpers.clickOnWebElementBySelector(SAVE_SAMPLE_BUTTON);
+          TimeUnit.SECONDS.sleep(1); // wait for reaction
+          webDriverHelpers.waitForPageLoadingSpinnerToDisappear(40);
         });
 
     When(
@@ -327,6 +338,13 @@ public class CreateNewSampleSteps implements En {
         "I complete all fields from Pathogen test result popup for PCR RT PCR Value Detection test type for DE version and save",
         () -> {
           buildPathogenTestDE("Nukleins\u00E4ure-Nachweis (z.B. PCR)");
+          webDriverHelpers.clickOnWebElementBySelector(SAVE_SAMPLE_BUTTON);
+        });
+
+    When(
+        "I complete all fields from Pathogen test result popup for PCR RT PCR Value Detection test type for DE version without date and save",
+        () -> {
+          buildPathogenTestWithoutDateDE("Nukleins\u00E4ure-Nachweis (z.B. PCR)");
           webDriverHelpers.clickOnWebElementBySelector(SAVE_SAMPLE_BUTTON);
         });
 
@@ -1083,6 +1101,21 @@ public class CreateNewSampleSteps implements En {
     selectTestResult(sampleTestResult.getSampleTestResults());
     fillDateOfResult(sampleTestResult.getDateOfResult(), Locale.GERMAN);
     fillTimeOfResult(sampleTestResult.getTimeOfResult());
+    selectResultVerifiedByLabSupervisor(
+        sampleTestResult.getResultVerifiedByLabSupervisor(),
+        RESULT_VERIFIED_BY_LAB_SUPERVISOR_OPTIONS);
+    fillTestResultsComment(sampleTestResult.getTestResultsComment());
+    return sampleTestResult;
+  }
+
+  private Sample buildPathogenTestWithoutDateDE(String testType) {
+    SampleService sampleService = new SampleService(faker);
+    sampleTestResult = sampleService.buildPathogenTestVerifiedWithoutDateDE(testType);
+    selectTypeOfTest(sampleTestResult.getTypeOfTest());
+    selectTestedDisease(sampleTestResult.getTestedDisease());
+    selectPathogenLaboratory(sampleTestResult.getLaboratory());
+    selectLaboratoryNamePopup(sampleTestResult.getLaboratoryName());
+    selectTestResult(sampleTestResult.getSampleTestResults());
     selectResultVerifiedByLabSupervisor(
         sampleTestResult.getResultVerifiedByLabSupervisor(),
         RESULT_VERIFIED_BY_LAB_SUPERVISOR_OPTIONS);

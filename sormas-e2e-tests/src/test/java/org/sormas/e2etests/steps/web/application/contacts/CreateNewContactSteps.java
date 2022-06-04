@@ -228,6 +228,25 @@ public class CreateNewContactSteps implements En {
         });
 
     When(
+        "I fill a new contact form with specified date for today for DE version",
+        () -> {
+          contact = contactService.buildGeneratedContactWithDateNowDE(LocalDate.now());
+          fillFirstName(contact.getFirstName());
+          fillLastName(contact.getLastName());
+          selectSex(contact.getSex());
+          fillDateOfReport(contact.getReportDate(), Locale.GERMAN);
+          selectResponsibleRegion(contact.getResponsibleRegion());
+          selectResponsibleDistrict(contact.getResponsibleDistrict());
+        });
+
+    When(
+        "I set last contact date {int} days before specified date",
+        (Integer days) -> {
+          webDriverHelpers.scrollToElement(DATE_OF_LAST_CONTACT_EDIT_CONTACT_INPUT);
+          fillDateOfLastContactEditContact(LocalDate.now().minusDays(days), Locale.GERMAN);
+        });
+
+    When(
         "^I fill a new contact form with chosen data without personal data$",
         () -> {
           contact = contactService.buildGeneratedContact();
@@ -269,11 +288,6 @@ public class CreateNewContactSteps implements En {
           selectResponsibleDistrict(contact.getResponsibleDistrict());
           selectResponsibleCommunity(contact.getResponsibleCommunity());
           selectTypeOfContact(contact.getTypeOfContact());
-          // field no longer available
-          //          fillAdditionalInformationOnTheTypeOfContact(
-          //              contact.getAdditionalInformationOnContactType());
-          // field no longer available
-          //  selectContactCategory(contact.getContactCategory().toUpperCase());
           fillRelationshipWithCase(contact.getRelationshipWithCase());
           fillDescriptionOfHowContactTookPlace(contact.getDescriptionOfHowContactTookPlace());
         });
@@ -365,6 +379,18 @@ public class CreateNewContactSteps implements En {
           softly.assertAll();
           webDriverHelpers.clickOnWebElementBySelector(LINE_LISTING_DISCARD_BUTTON);
         });
+
+    When(
+        "I fill a mandatory information and a date of last contact {int} days before the report date",
+        (Integer days) -> {
+          contact =
+              contactService.buildGeneratedContactWithParametrizedReportDataDE(
+                  LocalDate.now().minusDays(days));
+          fillDateOfReport(contact.getReportDate(), Locale.GERMAN);
+          fillFirstName(contact.getFirstName());
+          fillLastName(contact.getLastName());
+          selectSex(contact.getSex());
+        });
   }
 
   private void fillFirstName(String firstName) {
@@ -430,6 +456,14 @@ public class CreateNewContactSteps implements En {
     if (locale.equals(Locale.GERMAN)) formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     else formatter = DateTimeFormatter.ofPattern("M/d/yyyy");
     webDriverHelpers.fillInWebElement(DATE_OF_LAST_CONTACT_INPUT, formatter.format(date));
+  }
+
+  private void fillDateOfLastContactEditContact(LocalDate date, Locale locale) {
+    DateTimeFormatter formatter;
+    if (locale.equals(Locale.GERMAN)) formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    else formatter = DateTimeFormatter.ofPattern("M/d/yyyy");
+    webDriverHelpers.fillInWebElement(
+        DATE_OF_LAST_CONTACT_EDIT_CONTACT_INPUT, formatter.format(date));
   }
 
   private void fillCaseOrEventInformation(String caseOrEventInfo) {

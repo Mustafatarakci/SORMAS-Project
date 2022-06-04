@@ -40,6 +40,7 @@ import org.testng.asserts.SoftAssert;
 
 public class FollowUpStep implements En {
   public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("M/d/yyyy");
+  public static final DateTimeFormatter DATE_FORMATTER_DE = DateTimeFormatter.ofPattern("d.M.yyyy");
   public static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
   private final WebDriverHelpers webDriverHelpers;
   public static Visit visit;
@@ -261,6 +262,10 @@ public class FollowUpStep implements En {
         "I set Chills and Sweats Symptoms to ([^\"]*)",
         (String parameter) -> setChillsSweatsSymptoms(parameter));
 
+    When(
+        "I set Chills and Sweats Symptoms for DE version to ([^\"]*)",
+        (String parameter) -> setChillsSweatsSymptomsDE(parameter));
+
     When("I set Fever Symptoms to ([^\"]*)", (String parameter) -> setFeverSymptoms(parameter));
 
     When(
@@ -272,6 +277,11 @@ public class FollowUpStep implements En {
         "I set Date of symptom onset",
         () -> {
           fillDateOfSymptoms(LocalDate.now());
+        });
+    When(
+        "I set Date of symptom onset for {int} days ago",
+        (Integer days) -> {
+          fillDateOfSymptomsDE(LocalDate.now().minusDays(days));
         });
 
     When(
@@ -413,12 +423,21 @@ public class FollowUpStep implements En {
         DATE_OF_ONSET_INPUT, DATE_FORMATTER.format(dateOfSymptom));
   }
 
+  private void fillDateOfSymptomsDE(LocalDate dateOfSymptom) {
+    webDriverHelpers.clearAndFillInWebElement(
+        DATE_OF_ONSET_INPUT, DATE_FORMATTER_DE.format(dateOfSymptom));
+  }
+
   private void setFeelingIllSymptoms(String parameter) {
     webDriverHelpers.clickWebElementByText(FEELING_ILL_OPTIONS, parameter.toUpperCase());
   }
 
   private void setChillsSweatsSymptoms(String parameter) {
     webDriverHelpers.clickWebElementByText(CHILLS_SWEATS_OPTIONS, parameter.toUpperCase());
+  }
+
+  private void setChillsSweatsSymptomsDE(String parameter) {
+    webDriverHelpers.clickWebElementByText(CHILLS_SWEATS_OPTIONS_DE, parameter.toUpperCase());
   }
 
   private void setFeverSymptoms(String parameter) {

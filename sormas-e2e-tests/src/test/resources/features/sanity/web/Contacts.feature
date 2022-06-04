@@ -758,3 +758,16 @@ Feature: Contacts end to end tests
     And I fill a new contact form with same person data for DE version
     And I click on SAVE new contact case button
     And I check if National Health Id, Nickname and Passport number appear in Pick or create person popup
+
+  @issue=SORDEV-6146 @env_de @testIt
+  Scenario: Test Extend the follow-up until date calculation for cases and contacts
+    Given I log in with National User
+    When I click on the Contacts button from navbar
+    And I click on the NEW CONTACT button
+    And I fill a new contact form with specified date for today for DE version
+    And I click on SAVE new contact button
+    Then I check if follow up date is 2 weeks in the future after the report date
+    Then I set last contact date 7 days before specified date
+    Then I click on save Contact button
+    And I check if follow up date is 1 weeks in the future after the report date
+    And I check if expected follow up date is 7 days in the future after the report date
