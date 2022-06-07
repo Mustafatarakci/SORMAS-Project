@@ -64,9 +64,14 @@ public class ExternalSurveillanceToolGatewayFacadeEjb implements ExternalSurveil
 	}
 
 	@Override
-	public void sendCases(List<String> caseUuids) throws ExternalSurveillanceToolException {
+	public void sendCases(List<String> caseUuids, ExternalShareStatus externalShareStatus) throws ExternalSurveillanceToolException {
 		ExportParameters params = new ExportParameters();
 		params.setCaseUuids(caseUuids);
+		if (externalShareStatus.equals(ExternalShareStatus.ARCHIVED)) {
+			params.setArchived(true);
+		} else {
+			params.setArchived(false);
+		}
 
 		sendRequest(params);
 	}
@@ -131,6 +136,16 @@ public class ExternalSurveillanceToolGatewayFacadeEjb implements ExternalSurveil
 		eventService.getByUuids(eventUuids).forEach(event -> shareInfoService.createAndPersistShareInfo(event, ExternalShareStatus.SHARED));
 	}
 
+	// TODO: check if we need the shareInfoService
+	/*
+	 * public void updateCasesStatuses(List<String> entityUuids, ExternalShareStatus externalShareStatus) {
+	 * sendCases(entityUuids);
+	 * entityUuids.forEach(entityUuid -> {
+	 * shareInfoService.createAndPersistShareInfo(caseService.getByUuid(entityUuid), externalShareStatus);
+	 * });
+	 * }
+	 */
+
 	@Override
 	public void deleteCases(List<CaseDataDto> cases) throws ExternalSurveillanceToolException {
 		DeleteParameters params = new DeleteParameters();
@@ -186,7 +201,7 @@ public class ExternalSurveillanceToolGatewayFacadeEjb implements ExternalSurveil
 
 		try {
 			Response response =
-					ClientBuilder.newBuilder().connectTimeout(30, TimeUnit.SECONDS).build().target(serviceUrl).path(versionEndpoint).request().get();
+				ClientBuilder.newBuilder().connectTimeout(30, TimeUnit.SECONDS).build().target(serviceUrl).path(versionEndpoint).request().get();
 			int status = response.getStatus();
 
 			if (status != HttpServletResponse.SC_OK) {
@@ -195,7 +210,7 @@ public class ExternalSurveillanceToolGatewayFacadeEjb implements ExternalSurveil
 
 			ExternalSurveillanceToolResponse entity = response.readEntity(ExternalSurveillanceToolResponse.class);
 			return entity.getMessage();
-		} catch (Exception e){
+		} catch (Exception e) {
 			logger.error("Couldn't get version of external surveillance tool at {}{}", serviceUrl, versionEndpoint, e);
 			throw new ExternalSurveillanceToolException(I18nProperties.getString(Strings.ExternalSurveillanceToolGateway_versionRequestError));
 		}
@@ -205,6 +220,7 @@ public class ExternalSurveillanceToolGatewayFacadeEjb implements ExternalSurveil
 
 		private List<String> caseUuids;
 		private List<String> eventUuids;
+		private boolean archived;
 
 		public List<String> getCaseUuids() {
 			return caseUuids;
@@ -220,6 +236,14 @@ public class ExternalSurveillanceToolGatewayFacadeEjb implements ExternalSurveil
 
 		public void setEventUuids(List<String> eventUuids) {
 			this.eventUuids = eventUuids;
+		}
+
+		public boolean isArchived() {
+			return archived;
+		}
+
+		public void setArchived(boolean archived) {
+			this.archived = archived;
 		}
 	}
 
