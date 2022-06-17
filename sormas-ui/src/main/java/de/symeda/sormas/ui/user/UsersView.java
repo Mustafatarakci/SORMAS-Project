@@ -56,7 +56,6 @@ import de.symeda.sormas.api.utils.DataHelper;
 import de.symeda.sormas.ui.ControllerProvider;
 import de.symeda.sormas.ui.UserProvider;
 import de.symeda.sormas.ui.ViewModelProviders;
-import de.symeda.sormas.ui.utils.AbstractView;
 import de.symeda.sormas.ui.utils.ButtonHelper;
 import de.symeda.sormas.ui.utils.ComboBoxHelper;
 import de.symeda.sormas.ui.utils.CssStyles;
@@ -72,7 +71,7 @@ import de.symeda.sormas.ui.utils.ViewConfiguration;
  * See also {@link UserController} for fetching the data, the actual CRUD
  * operations and controlling the view based on events from outside.
  */
-public class UsersView extends AbstractView {
+public class UsersView extends AbstractUserView {
 
 	private static final long serialVersionUID = -3533557348144005469L;
 

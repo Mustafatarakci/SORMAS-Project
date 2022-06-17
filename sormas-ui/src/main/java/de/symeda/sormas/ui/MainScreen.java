@@ -86,6 +86,7 @@ import de.symeda.sormas.ui.statistics.AbstractStatisticsView;
 import de.symeda.sormas.ui.statistics.StatisticsView;
 import de.symeda.sormas.ui.task.TasksView;
 import de.symeda.sormas.ui.travelentry.TravelEntriesView;
+import de.symeda.sormas.ui.user.AbstractUserView;
 import de.symeda.sormas.ui.user.UsersView;
 import de.symeda.sormas.ui.utils.ButtonHelper;
 import de.symeda.sormas.ui.utils.CssStyles;
@@ -249,8 +250,13 @@ public class MainScreen extends HorizontalLayout {
 				I18nProperties.getCaption(Captions.mainMenuStatistics),
 				VaadinIcons.BAR_CHART);
 		}
-		if (permitted(UserRight.USER_VIEW)) {
-			menu.addView(UsersView.class, UsersView.VIEW_NAME, I18nProperties.getCaption(Captions.mainMenuUsers), VaadinIcons.USERS);
+		if (UserProvider.getCurrent().hasUserAccess()) {
+			AbstractUserView.registerViews(navigator);
+			menu.addView(
+				permitted(UserRight.USER_VIEW) ? UsersView.class : UserRolesView.class,
+				AbstractUserView.ROOT_VIEW_NAME,
+				I18nProperties.getCaption(Captions.mainMenuUsers),
+				VaadinIcons.USERS);
 		}
 		if (UserProvider.getCurrent().hasConfigurationAccess()) {
 			AbstractConfigurationView.registerViews(navigator);
