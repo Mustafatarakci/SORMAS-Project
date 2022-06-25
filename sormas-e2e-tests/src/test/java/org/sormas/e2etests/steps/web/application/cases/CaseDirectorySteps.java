@@ -104,6 +104,7 @@ import static org.sormas.e2etests.pages.application.cases.CaseDirectoryPage.getR
 import static org.sormas.e2etests.pages.application.cases.CreateNewCasePage.DATE_OF_REPORT_INPUT;
 import static org.sormas.e2etests.pages.application.cases.EditCasePage.ARCHIVE_RELATED_CONTACTS_CHECKBOX;
 import static org.sormas.e2etests.pages.application.cases.EditCasePage.BACK_TO_CASES_BUTTON;
+import static org.sormas.e2etests.pages.application.cases.EditCasePage.PICK_OR_CREATE_PERSON_POPUP_HEADER;
 import static org.sormas.e2etests.pages.application.cases.EditCasePage.REFERENCE_DEFINITION_TEXT;
 import static org.sormas.e2etests.pages.application.cases.EditCasePage.getCaseIDPathByIndex;
 import static org.sormas.e2etests.pages.application.cases.EpidemiologicalDataCasePage.ACTIVITY_AS_CASE_NEW_ENTRY_BUTTON;
@@ -519,6 +520,19 @@ public class CaseDirectorySteps implements En {
             webDriverHelpers.fillAndSubmitInWebElement(
                 PERSON_ID_NAME_CONTACT_INFORMATION_LIKE_INPUT,
                 apiState.getLastCreatedPerson().getUuid()));
+    When(
+        "I check that Pick or create person popup is not visible after Case creation",
+        () -> {
+          webDriverHelpers.waitForPageLoadingSpinnerToDisappear(10);
+          Boolean elementVisible = true;
+          try {
+            webDriverHelpers.scrollToElementUntilIsVisible(PICK_OR_CREATE_PERSON_POPUP_HEADER);
+          } catch (Throwable ignored) {
+            elementVisible = false;
+          }
+          softly.assertFalse(elementVisible, "Pick or create case is visible!");
+          softly.assertAll();
+        });
     And(
         "I apply Person Id filter to one attached to last created UI Case on Case directory page",
         () ->

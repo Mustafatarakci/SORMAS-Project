@@ -1326,3 +1326,17 @@ Feature: Case end to end tests
     When I click on save button in the case popup
     And I click on the Cases button from navbar
     Then I compare previous first case ID on the list with actually second case ID on list
+
+  @issue=SORDEV-6603 @env_main
+  Scenario: Person duplication recognition does not trigger for persons with archived entities
+    Given I log in as a Admin User
+    And I click on the Cases button from navbar
+    And I click on the NEW CASE button
+    When I fill new case data for duplicates merge with for one person data
+    And I click on Save button in Case form
+    Then I click on the Archive case button and confirm popup
+    Then I click on the Cases button from navbar
+    And I click on the NEW CASE button
+    When I fill new case data for duplicates merge with for one person data
+    And I click on Save button in Case form
+    And I check that Pick or create person popup is not visible after Case creation
